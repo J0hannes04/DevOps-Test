@@ -13,14 +13,14 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Setup Java JDK
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
 
     - name: Build & Test (Continuous Integration)
-      run: mvn clean test
+      run: .\mvnw.cmd clean test   # <--- Hier wurde der Wrapper für Windows eingesetzt
 
     - name: Docker Image bauen
       run: docker build -t devops-project/spring-app:latest .
