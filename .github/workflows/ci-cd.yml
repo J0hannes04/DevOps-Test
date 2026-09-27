@@ -6,11 +6,18 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted # Das sagt GitHub: Nutze den Windows-Runner!
+    runs-on: self-hosted
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
 
     - name: Build & Test (Continuous Integration)
       run: mvn clean test
