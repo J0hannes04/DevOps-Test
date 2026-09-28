@@ -10,4 +10,9 @@ public class HelloController {
     public String home() {
         return "Willkommen im DevOps-Projekt! Die CI/CD-Pipeline laeuft automatisch!";
     }
+
+    @GetMapping("/team")
+    public String team() {
+        return "Hier entsteht die Team-Seite unseres DevOps-Projekts!";
+    }
 }

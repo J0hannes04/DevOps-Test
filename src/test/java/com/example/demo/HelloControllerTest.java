@@ -16,4 +16,10 @@ class HelloControllerTest {
         // 3. Wir prüfen, ob der Text exakt übereinstimmt
         assertEquals("Willkommen im DevOps-Projekt! Die CI/CD-Pipeline laeuft automatisch!", result);
     }
+
+    @Test
+    void shouldReturnTeamMessage() {
+        HelloController controller = new HelloController();
+        assertEquals("Hier entsteht die Team-Seite unseres DevOps-Projekts!", controller.team());
+    }
 }
