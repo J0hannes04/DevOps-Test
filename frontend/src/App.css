@@ -1,0 +1,336 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  /* Verlauf im 315-Grad-Winkel: Startet unten rechts dunkel-pink/magenta und verläuft nach oben links ins Schwarz */
+  background: linear-gradient(315deg, #d000ff 0%, #4a0072 35%, #0d001a 70%, #000000 100%);
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: radial-gradient(circle at center, #4e0c62 0%, #09090b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-wrapper {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(315deg, #d000ff 0%, #4a0072 35%, #0d001a 70%, #000000 100%);
+}
+
+.login-card {
+  width: 1050px;
+  max-width: 90vw;
+  height: 600px;
+  max-height: 90vh;
+  /* Grundfarbe auf Dunkelblau ändern, damit kein Weiß mehr an den Ecken durchblitzt */
+  background: #0d1527; 
+  border-radius: 28px;
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6);
+  display: flex;
+  overflow: hidden;
+}
+
+/* Linke Sidebar */
+.login-sidebar {
+  width: 42%;
+  background-color: #0d1527;
+  color: #ffffff;
+  padding: 50px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  /* Linke Ecken explizit abrunden, um Blitzen an der Kante zu stoppen */
+  border-top-left-radius: 28px;
+  border-bottom-left-radius: 28px;
+}
+
+.sidebar-content {
+  position: relative;
+  z-index: 2;
+}
+
+.login-sidebar h1 {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 16px;
+}
+
+.login-sidebar p {
+  font-size: 14px;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.learn-more-btn {
+  background-color: #0085ff;
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 133, 255, 0.4);
+  transition: background 0.2s;
+}
+
+.learn-more-btn:hover {
+  background-color: #006fd6;
+}
+
+/* Dekorative Formen links */
+.shape {
+  position: absolute;
+  background: linear-gradient(135deg, #0052cc 0%, #0085ff 100%);
+  border-radius: 24px;
+  opacity: 0.8;
+}
+
+.shape-1 {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  bottom: 30px;
+  left: 30px;
+}
+
+.shape-2 {
+  width: 140px;
+  height: 250px;
+  transform: rotate(-35deg);
+  bottom: -40px;
+  right: 30px;
+}
+
+.shape-3 {
+  width: 110px;
+  height: 200px;
+  transform: rotate(-35deg);
+  bottom: 40px;
+  right: 120px;
+  opacity: 0.4;
+}
+
+.login-form-container {
+  width: 58%;
+  background-color: #ffffff; /* Weiß scharf auf die rechte Seite begrenzen */
+  padding: 40px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* Rechte Ecken der Karte abrunden */
+  border-top-right-radius: 28px;
+  border-bottom-right-radius: 28px;
+}
+
+.form-header {
+  margin-bottom: 20px;
+}
+
+.logo-icon {
+  width: 30px;
+  height: 30px;
+  background: #0085ff;
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.form-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sub-title {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 3px;
+}
+
+/* Social Logins */
+.social-login {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.social-btn {
+  flex: 1;
+  padding: 9px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.social-btn:hover {
+  background: #f8fafc;
+}
+
+.google-icon {
+  color: #ea4335;
+  font-weight: bold;
+}
+
+/* Trenner */
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  
+}
+
+.divider span {
+  padding: 0 10px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* Eingabefelder */
+.input-group {
+  margin-bottom: 14px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 5px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.2s;
+  background: #f8fafc;
+}
+
+.input-group input:focus {
+  border-color: #0085ff;
+  background: #ffffff;
+}
+
+/* Optionen (Checkbox & Forgot Password) */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  margin-bottom: 20px;
+}
+
+.checkbox-label {
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.forgot-link {
+  color: #0085ff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+/* Submit Button */
+.submit-btn {
+  width: 100%;
+  padding: 11px;
+  background-color: #0085ff;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 4px 15px rgba(0, 133, 255, 0.3);
+}
+
+.submit-btn:hover {
+  background-color: #006fd6;
+}
+
+/* Status & Footer Switch */
+.status-message {
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #0d9488;
+  text-align: center;
+}
+
+.switch-mode {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.text-link {
+  background: none;
+  border: none;
+  color: #0085ff;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-size: 11px;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}

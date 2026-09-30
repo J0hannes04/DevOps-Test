@@ -1,8 +1,40 @@
 version: '3.8'
+
 services:
+  # 1. Die MySQL Datenbank
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: devopsdb
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: devopsuser
+      MYSQL_PASSWORD: devopspassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped
+
+  # 2. Deine Spring Boot App
   app:
     build:
       context: .
     ports:
-      - "8080:8080"
+      - "9090:8080"
+    depends_on:
+      - db
     restart: unless-stopped
+
+  # 3. Die grafische Oberfläche (Adminer)
+  adminer:
+    image: adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    ports:
+      - "8081:8080" # <-- Wieder auf 8081 korrigiert
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  db_data:
