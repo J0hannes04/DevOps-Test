@@ -22,7 +22,7 @@ function App() {
     setMessage('');
 
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'; 
-    const url = `http://localhost:9090${endpoint}`;
+    const url = `http://localhost:9091${endpoint}`;
 
     const payload = isLogin 
       ? { username, password } 
