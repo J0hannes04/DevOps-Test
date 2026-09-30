@@ -20,7 +20,7 @@ services:
     build:
       context: .
     ports:
-      - "9091:9090" # <-- Wieder auf 9091 korrigiert
+      - "9091:8080"
     depends_on:
       - db
     restart: unless-stopped
