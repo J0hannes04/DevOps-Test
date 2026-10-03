@@ -26,6 +26,10 @@ jobs:
     - name: Docker Image bauen
       run: docker build -t devops-project/spring-app:latest .
 
-    # ANPASSUNG 2: --force-recreate hinzugefügt, damit Docker nicht veraltete Cache-Layer verwendet
+    # NEU: Räumt alte Container des Projekts "devops-app" sicher ab
+    - name: Stop alte Container
+      run: docker compose -p devops-app down
+
+    # ANPASSUNG 2 & 3: --force-recreate und fixer Projektname (-p devops-app)
     - name: Deployment via Docker Compose (Continuous Deployment)
-      run: docker compose up --build --force-recreate -d
+      run: docker compose -p devops-app up --build --force-recreate -d
