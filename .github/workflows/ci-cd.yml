@@ -1,35 +1,75 @@
-name: Local CI/CD Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
 
 jobs:
-  build-and-deploy:
-    runs-on: self-hosted
+  backend:
+    name: Backend build and tests
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Java JDK
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: maven
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: maven
 
-    # ANPASSUNG 1: -DskipTests hinzugefügt, um den Datenbank-Verbindungsfehler beim lokalen Test zu vermeiden
-    - name: Build & Test (Continuous Integration)
-      run: .\mvnw.cmd clean package -DskipTests
+      - name: Build and test backend
+        run: bash ./mvnw clean verify
 
-    - name: Docker Image bauen
-      run: docker build -t devops-project/spring-app:latest .
+  frontend:
+    name: Frontend lint and build
+    runs-on: ubuntu-latest
 
-    # NEU: Räumt alte Container des Projekts "devops-app" sicher ab
-    - name: Stop alte Container
-      run: docker compose -p devops-app down
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    # ANPASSUNG 2 & 3: --force-recreate und fixer Projektname (-p devops-app)
-    - name: Deployment via Docker Compose (Continuous Deployment)
-      run: docker compose -p devops-app up --build --force-recreate -d
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+  deploy:
+    name: Deploy with Docker Compose
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+
+    env:
+      MYSQL_DATABASE: devopsdb
+      MYSQL_USER: devopsuser
+      MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and start services
+        run: docker compose -p devops-app up -d --build --force-recreate
+
+      - name: Verify running services
+        run: docker compose -p devops-app ps

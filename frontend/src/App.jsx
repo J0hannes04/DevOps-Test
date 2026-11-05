@@ -22,7 +22,7 @@ function App() {
     setMessage('');
 
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'; 
-    const url = `http://localhost:9090${endpoint}`;
+    const url = `${import.meta.env.VITE_API_URL || ''}${endpoint}`;
 
     const payload = isLogin 
       ? { username, password } 
