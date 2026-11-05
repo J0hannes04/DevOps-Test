@@ -46,7 +46,7 @@ function App() {
 } else {
   setMessage(`Fehler: ${text}`);
 }
-    } catch (error) {
+    } catch {
       setMessage("Netzwerkfehler: Backend nicht erreichbar.");
     }
   };

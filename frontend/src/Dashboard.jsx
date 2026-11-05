@@ -6,8 +6,12 @@ function Dashboard() {
   const navigate = useNavigate();
   
   // Neue States für unser Profil-Update
-  const [currentUsername, setCurrentUsername] = useState('');
-  const [newUsername, setNewUsername] = useState('');
+  const [currentUsername, setCurrentUsername] = useState(
+    () => localStorage.getItem('username') || sessionStorage.getItem('username') || ''
+  );
+  const [newUsername, setNewUsername] = useState(
+    () => localStorage.getItem('username') || sessionStorage.getItem('username') || ''
+  );
   const [newEmail, setNewEmail] = useState('');
   const [message, setMessage] = useState('');
 
@@ -18,9 +22,6 @@ function Dashboard() {
     
     if (!loggedInUser) {
       navigate('/'); // Zurück zum Login, wenn nicht eingeloggt
-    } else {
-      setCurrentUsername(loggedInUser);
-      setNewUsername(loggedInUser); // Input-Feld schon mal mit dem aktuellen Namen füllen
     }
   }, [navigate]);
 
@@ -65,7 +66,7 @@ function Dashboard() {
       } else {
         setMessage(`Fehler: ${text}`);
       }
-    } catch (error) {
+    } catch {
       setMessage('Netzwerkfehler: Backend nicht erreichbar.');
     }
   };
