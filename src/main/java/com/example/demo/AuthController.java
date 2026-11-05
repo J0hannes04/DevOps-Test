@@ -48,4 +48,27 @@ public class AuthController {
 
         return ResponseEntity.ok("Erfolgreich eingeloggt!");
     }
+
+   @PutMapping("/update")
+    public ResponseEntity<?> updateUser(@RequestBody UpdateRequest request) {
+        // 1. User anhand des aktuellen Namens suchen (angepasst an dein Repository)
+        User user = userRepository.findByUsername(request.getCurrentUsername());
+        
+        if (user != null) {
+            // 2. Nur aktualisieren, wenn ein neuer Wert mitgeschickt wurde
+            if (request.getNewUsername() != null && !request.getNewUsername().isEmpty()) {
+                user.setUsername(request.getNewUsername());
+            }
+            if (request.getNewEmail() != null && !request.getNewEmail().isEmpty()) {
+                user.setEmail(request.getNewEmail());
+            }
+            
+            // 3. Speichern
+            userRepository.save(user);
+            return ResponseEntity.ok("Profil erfolgreich aktualisiert!");
+        } else {
+            return ResponseEntity.badRequest().body("Benutzer nicht gefunden.");
+        }
+    }
+    
 }

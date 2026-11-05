@@ -19,6 +19,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable()) // Erlaubt POST-Anfragen von außen
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/", "/team").permitAll()
                 .requestMatchers("/api/auth/**").permitAll() // Registrierung & Login sind öffentlich
                 .anyRequest().authenticated()
             );
