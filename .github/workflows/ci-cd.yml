@@ -70,7 +70,10 @@ jobs:
 
       - name: Build and start services
         run: |
-          docker compose -p devops-app down -v --remove-orphans || true
+          docker compose -p devops-app down --remove-orphans
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "No existing Compose deployment found; continuing."
+          }
           docker compose -p devops-app up -d --build --force-recreate
 
       - name: Verify running services
