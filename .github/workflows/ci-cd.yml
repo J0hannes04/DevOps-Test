@@ -69,7 +69,9 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Build and start services
-        run: docker compose -p devops-app up -d --build --force-recreate
+        run: |
+          docker compose -p devops-app down -v --remove-orphans || true
+          docker compose -p devops-app up -d --build --force-recreate
 
       - name: Verify running services
         run: docker compose -p devops-app ps
