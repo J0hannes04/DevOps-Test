@@ -101,6 +101,9 @@ function Dashboard() {
                 type="text" 
                 value={newUsername} 
                 onChange={(e) => setNewUsername(e.target.value)} 
+                minLength={3}
+                maxLength={50}
+                pattern="[a-zA-Z0-9._-]+"
                 required 
                 style={{ padding: '8px', width: '100%', maxWidth: '300px', border: '1px solid #ccc', borderRadius: '4px' }}
               />
@@ -113,6 +116,7 @@ function Dashboard() {
                 value={newEmail} 
                 onChange={(e) => setNewEmail(e.target.value)} 
                 placeholder="mail@beispiel.de"
+                maxLength={254}
                 style={{ padding: '8px', width: '100%', maxWidth: '300px', border: '1px solid #ccc', borderRadius: '4px' }}
               />
             </div>

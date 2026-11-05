@@ -3,6 +3,7 @@ package com.example.demo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -17,22 +18,25 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@RequestBody User user) {
-        if (userRepository.findByUsername(user.getUsername()) != null) {
+    public ResponseEntity<String> registerUser(@Valid @RequestBody RegisterRequest request) {
+        if (userRepository.findByUsername(request.getUsername()) != null) {
             return ResponseEntity.badRequest().body("Benutzername existiert bereits!");
         }
-        if (userRepository.findByEmail(user.getEmail()) != null) {
+        if (userRepository.findByEmail(request.getEmail()) != null) {
             return ResponseEntity.badRequest().body("E-Mail-Adresse existiert bereits!");
         }
-        
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
         
         return ResponseEntity.ok("Erfolgreich registriert!");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> loginUser(@RequestBody User loginData) {
+    public ResponseEntity<String> loginUser(@Valid @RequestBody LoginRequest loginData) {
         User user = userRepository.findByUsername(loginData.getUsername());
 
         // Prüfen, ob der Benutzer existiert
@@ -49,7 +53,7 @@ public class AuthController {
     }
 
    @PutMapping("/update")
-    public ResponseEntity<?> updateUser(@RequestBody UpdateRequest request) {
+    public ResponseEntity<?> updateUser(@Valid @RequestBody UpdateRequest request) {
         // 1. User anhand des aktuellen Namens suchen (angepasst an dein Repository)
         User user = userRepository.findByUsername(request.getCurrentUsername());
         

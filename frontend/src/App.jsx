@@ -85,6 +85,9 @@ function App() {
                 value={username} 
                 onChange={(e) => setUsername(e.target.value)} 
                 autoComplete="off"
+                minLength={3}
+                maxLength={50}
+                pattern="[a-zA-Z0-9._-]+"
                 required 
               />
             </div>
@@ -97,6 +100,7 @@ function App() {
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   autoComplete="off"
+                  maxLength={254}
                   required 
                 />
               </div>
@@ -109,6 +113,8 @@ function App() {
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
                 autoComplete="new-password"
+                minLength={8}
+                maxLength={72}
                 required 
               />
             </div>
