@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowRight, Box, CheckCircle2, Lock, Mail, User } from 'lucide-react';
 import './App.css';
 
 function App() {
@@ -52,36 +53,40 @@ function App() {
   };
 
   return (
-    <div className="login-wrapper">
-      <div className="login-card">
-        
-        {/* Linke Sidebar */}
-        <div className="login-sidebar">
-          <div className="sidebar-content">
-            <h1>Welcome to<br />MaterialM</h1>
-            <p>MaterialM helps developers to build organized and well coded dashboards full of beautiful and rich modules.</p>
-            <button type="button" className="learn-more-btn">Learn More</button>
-          </div>
-          <div className="shape shape-1"></div>
-          <div className="shape shape-2"></div>
-          <div className="shape shape-3"></div>
-        </div>
+    <div className="auth-page">
+      <div className="ambient-orb ambient-orb-purple"></div>
+      <div className="ambient-orb ambient-orb-blue"></div>
 
-        {/* Rechte Formular-Sektion */}
-        <div className="login-form-container">
+      <div className="auth-layout">
+        <section className="brand-card">
+          <div className="brand-header">
+            <div className="brand-icon"><Box size={28} /></div>
+            <span>MaterialM</span>
+          </div>
+
+          <h1>Welcome to<br />a new dimension.</h1>
+          <p>MaterialM helps developers to build organized and well-coded dashboards full of beautiful and rich modules. Elevate your development process today.</p>
+
+          <div className="benefits">
+            <div><CheckCircle2 size={20} /> <span>Beautifully crafted modules</span></div>
+            <div><CheckCircle2 size={20} /> <span>Clean and organized code</span></div>
+          </div>
+
+          <button type="button" className="learn-more-btn">Learn More</button>
+        </section>
+
+        <section className="auth-card">
           <div className="form-header">
-            
             <h2>{isLogin ? 'Sign In' : 'Create Account'}</h2>
-            <p className="sub-title">Your Admin Dashboard</p>
+            <p>{isLogin ? 'Welcome back! Please enter your details.' : 'Let us get you set up with an account.'}</p>
           </div>
-
-        
 
           <form onSubmit={handleSubmit} autoComplete="off">
-            <div className="input-group">
-              <label>Username</label>
+            <div className="input-group icon-input">
+              <User size={20} />
               <input 
                 type="text" 
+                placeholder="Username"
                 value={username} 
                 onChange={(e) => setUsername(e.target.value)} 
                 autoComplete="off"
@@ -93,10 +98,11 @@ function App() {
             </div>
 
             {!isLogin && (
-              <div className="input-group">
-                <label>E-Mail Address</label>
+              <div className="input-group icon-input">
+                <Mail size={20} />
                 <input 
                   type="email" 
+                  placeholder="Email Address"
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   autoComplete="off"
@@ -106,10 +112,11 @@ function App() {
               </div>
             )}
 
-            <div className="input-group">
-              <label>Password</label>
+            <div className="input-group icon-input">
+              <Lock size={20} />
               <input 
                 type="password" 
+                placeholder="Password"
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
                 autoComplete="new-password"
@@ -119,30 +126,31 @@ function App() {
               />
             </div>
 
-            <div className="form-options">
+            <div className="form-options auth-options">
               <label className="checkbox-label">
-                <input type="checkbox" /> Remember this Device
+                <input type="checkbox" /> Remember me
               </label>
+              {isLogin && <button type="button" className="forgot-link">Forgot Password?</button>}
             </div>
 
             <button type="submit" className="submit-btn">
               {isLogin ? 'Sign In' : 'Sign Up'}
+              <ArrowRight size={17} />
             </button>
           </form>
 
           {message && <p className="status-message">{message}</p>}
 
           <div className="switch-mode">
-            <span>{isLogin ? "New to MaterialM?" : "Already have an account?"}</span>{' '}
+            <span>{isLogin ? "Don't have an account?" : "Already have an account?"}</span>{' '}
             <button type="button" className="text-link" onClick={() => {
               setIsLogin(!isLogin);
               clearFields();
             }}>
-              {isLogin ? 'Create an account' : 'Sign In'}
+              {isLogin ? 'Create one now' : 'Sign In instead'}
             </button>
           </div>
-        </div>
-
+        </section>
       </div>
     </div>
   );

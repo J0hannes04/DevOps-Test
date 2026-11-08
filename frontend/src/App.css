@@ -2,335 +2,311 @@
 
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
-html, body {
+.auth-page {
+  min-height: 100vh;
   width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  /* Verlauf im 315-Grad-Winkel: Startet unten rechts dunkel-pink/magenta und verläuft nach oben links ins Schwarz */
-  background: linear-gradient(315deg, #d000ff 0%, #4a0072 35%, #0d001a 70%, #000000 100%);
-  font-family: 'Inter', sans-serif;
-  overflow: hidden;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  background: radial-gradient(circle at center, #4e0c62 0%, #09090b 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0b0014, #0d021f 55%, #130029);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
 }
 
-.login-wrapper {
-  width: 100%;
-  height: 100vh;
+.ambient-orb {
+  position: absolute;
+  width: 440px;
+  height: 440px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.ambient-orb-purple {
+  top: -180px;
+  left: 18%;
+  background: #7e22ce;
+}
+
+.ambient-orb-blue {
+  right: 18%;
+  bottom: -180px;
+  background: #2563eb;
+}
+
+.auth-layout {
+  width: min(1150px, 100%);
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: linear-gradient(315deg, #d000ff 0%, #4a0072 35%, #0d001a 70%, #000000 100%);
-}
-
-.login-card {
-  width: 1050px;
-  max-width: 90vw;
-  height: 600px;
-  max-height: 90vh;
-  /* Grundfarbe auf Dunkelblau ändern, damit kein Weiß mehr an den Ecken durchblitzt */
-  background: #0d1527; 
-  border-radius: 28px;
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6);
-  display: flex;
-  overflow: hidden;
-}
-
-/* Linke Sidebar */
-.login-sidebar {
-  width: 42%;
-  background-color: #0d1527;
-  color: #ffffff;
-  padding: 50px 40px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
   position: relative;
-  overflow: hidden;
-  /* Linke Ecken explizit abrunden, um Blitzen an der Kante zu stoppen */
-  border-top-left-radius: 28px;
-  border-bottom-left-radius: 28px;
+  z-index: 1;
 }
 
-.sidebar-content {
-  position: relative;
-  z-index: 2;
+.brand-card,
+.auth-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 32px;
+  backdrop-filter: blur(18px);
 }
 
-.login-sidebar h1 {
-  font-size: 32px;
+.brand-card {
+  width: 56%;
+  padding: 56px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+}
+
+.brand-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 64px;
+  font-size: 24px;
   font-weight: 700;
-  line-height: 1.25;
-  margin-bottom: 16px;
+  letter-spacing: 0.04em;
 }
 
-.login-sidebar p {
-  font-size: 14px;
-  color: #94a3b8;
-  line-height: 1.5;
-  margin-bottom: 24px;
+.brand-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: #2563eb;
+  box-shadow: 0 0 24px rgba(37, 99, 235, 0.45);
+}
+
+.brand-card h1 {
+  margin: 0 0 24px;
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 1.08;
+  background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.58));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-card p {
+  max-width: 520px;
+  margin: 0 0 36px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.benefits {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 42px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.benefits div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.benefits svg {
+  color: #3b82f6;
+}
+
+.learn-more-btn,
+.forgot-link,
+.text-link {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
 }
 
 .learn-more-btn {
-  background-color: #0085ff;
-  color: white;
-  border: none;
-  padding: 10px 22px;
-  border-radius: 24px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0, 133, 255, 0.4);
-  transition: background 0.2s;
+  padding: 12px 30px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
 }
 
 .learn-more-btn:hover {
-  background-color: #006fd6;
+  background: rgba(255, 255, 255, 0.1);
 }
 
-/* Dekorative Formen links */
-.shape {
-  position: absolute;
-  background: linear-gradient(135deg, #0052cc 0%, #0085ff 100%);
-  border-radius: 24px;
-  opacity: 0.8;
-}
-
-.shape-1 {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  bottom: 30px;
-  left: 30px;
-}
-
-.shape-2 {
-  width: 140px;
-  height: 250px;
-  transform: rotate(-35deg);
-  bottom: -40px;
-  right: 30px;
-}
-
-.shape-3 {
-  width: 110px;
-  height: 200px;
-  transform: rotate(-35deg);
-  bottom: 40px;
-  right: 120px;
-  opacity: 0.4;
-}
-
-.login-form-container {
-  width: 58%;
-  background-color: #ffffff; /* Weiß scharf auf die rechte Seite begrenzen */
-  padding: 40px 60px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  /* Rechte Ecken der Karte abrunden */
-  border-top-right-radius: 28px;
-  border-bottom-right-radius: 28px;
+.auth-card {
+  width: 46%;
+  margin-left: -48px;
+  margin-top: 96px;
+  padding: 40px;
+  background: rgba(0, 0, 0, 0.42);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.65);
 }
 
 .form-header {
-  margin-bottom: 20px;
-}
-
-.logo-icon {
-  width: 30px;
-  height: 30px;
-  background: #0085ff;
-  color: white;
-  font-weight: bold;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  margin-bottom: 10px;
+  margin-bottom: 30px;
 }
 
 .form-header h2 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #0f172a;
+  margin: 0 0 8px;
+  font-size: 2rem;
 }
 
-.sub-title {
-  font-size: 12px;
-  color: #64748b;
-  margin-top: 3px;
+.form-header p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
 }
 
-/* Social Logins */
-.social-login {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
+.auth-card form {
+  display: grid;
+  gap: 18px;
 }
 
-.social-btn {
-  flex: 1;
-  padding: 9px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #334155;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: background 0.2s;
-}
-
-.social-btn:hover {
-  background: #f8fafc;
-}
-
-.google-icon {
-  color: #ea4335;
-  font-weight: bold;
-}
-
-/* Trenner */
-.divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin-bottom: 16px;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  
-}
-
-.divider span {
-  padding: 0 10px;
-  font-size: 11px;
-  color: #94a3b8;
-}
-
-/* Eingabefelder */
 .input-group {
-  margin-bottom: 14px;
+  position: relative;
 }
 
-.input-group label {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  color: #334155;
-  margin-bottom: 5px;
+.icon-input svg {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+}
+
+.icon-input:focus-within svg {
+  color: #3b82f6;
 }
 
 .input-group input {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 13px;
-  color: #0f172a;
-  outline: none;
-  transition: border-color 0.2s;
-  background: #f8fafc;
+  padding: 16px 16px 16px 48px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  outline: 0;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font: inherit;
+}
+
+.input-group input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .input-group input:focus {
-  border-color: #0085ff;
-  background: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
 }
 
-/* Optionen (Checkbox & Forgot Password) */
-.form-options {
+.auth-options {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 11px;
-  margin-bottom: 20px;
+  justify-content: space-between;
+  margin-top: 2px;
 }
 
 .checkbox-label {
-  color: #64748b;
   display: flex;
   align-items: center;
-  gap: 6px;
-  cursor: pointer;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+}
+
+.checkbox-label input {
+  accent-color: #2563eb;
 }
 
 .forgot-link {
-  color: #0085ff;
-  text-decoration: none;
-  font-weight: 500;
+  background: transparent;
+  color: #3b82f6;
+  font-size: 0.85rem;
 }
 
-.forgot-link:hover {
-  text-decoration: underline;
-}
-
-/* Submit Button */
 .submit-btn {
   width: 100%;
-  padding: 11px;
-  background-color: #0085ff;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 16px;
+  border: 0;
+  border-radius: 12px;
+  background: #2563eb;
+  color: #fff;
   cursor: pointer;
-  transition: background 0.2s;
-  box-shadow: 0 4px 15px rgba(0, 133, 255, 0.3);
+  font: inherit;
+  font-weight: 600;
+  box-shadow: 0 0 18px rgba(37, 99, 235, 0.4);
 }
 
 .submit-btn:hover {
-  background-color: #006fd6;
+  background: #3b82f6;
 }
 
-/* Status & Footer Switch */
 .status-message {
-  margin-top: 10px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #0d9488;
+  margin: 16px 0 0;
+  color: #fca5a5;
+  font-size: 0.9rem;
   text-align: center;
 }
 
 .switch-mode {
-  margin-top: 16px;
+  margin-top: 30px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
   text-align: center;
-  font-size: 11px;
-  color: #64748b;
 }
 
 .text-link {
-  background: none;
-  border: none;
-  color: #0085ff;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-  font-size: 11px;
+  background: transparent;
+  color: #3b82f6;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
-.text-link:hover {
-  text-decoration: underline;
+@media (max-width: 900px) {
+  .auth-layout {
+    display: block;
+  }
+
+  .brand-card,
+  .auth-card {
+    width: 100%;
+  }
+
+  .brand-card {
+    padding: 40px;
+  }
+
+  .brand-header {
+    margin-bottom: 40px;
+  }
+
+  .auth-card {
+    margin: -20px 0 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .auth-page {
+    padding: 14px;
+  }
+
+  .brand-card,
+  .auth-card {
+    padding: 28px 22px;
+    border-radius: 24px;
+  }
+
+  .brand-card h1 {
+    font-size: 2.5rem;
+  }
 }
