@@ -78,7 +78,8 @@ public class AuthController {
     }
 
     @GetMapping("/csrf")
-    public ResponseEntity<Void> csrf(CsrfToken ignoredToken) {
+    public ResponseEntity<Void> csrf(CsrfToken token) {
+        token.getToken();
         return ResponseEntity.noContent().build();
     }
 
