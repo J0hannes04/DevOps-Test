@@ -22,7 +22,7 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - name: Build and test backend
+      - name: Build backend and run all tests
         run: bash ./mvnw clean verify
 
   frontend:
