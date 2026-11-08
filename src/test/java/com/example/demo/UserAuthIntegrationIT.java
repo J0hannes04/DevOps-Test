@@ -1,6 +1,7 @@
 package com.example.demo;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -13,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -58,6 +61,7 @@ class UserAuthIntegrationIT {
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType("application/json")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
             .andExpect(content().string("Erfolgreich registriert!"));
@@ -74,6 +78,7 @@ class UserAuthIntegrationIT {
         RegisterRequest registration = registerRequest("login-user", "login@example.com", "password123");
         mockMvc.perform(post("/api/auth/register")
                 .contentType("application/json")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .content(objectMapper.writeValueAsString(registration)))
             .andExpect(status().isOk());
 
@@ -83,9 +88,42 @@ class UserAuthIntegrationIT {
 
         mockMvc.perform(post("/api/auth/login")
                 .contentType("application/json")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .content(objectMapper.writeValueAsString(login)))
             .andExpect(status().isOk())
             .andExpect(content().string("Erfolgreich eingeloggt!"));
+    }
+
+    @Test
+    void shouldProtectCurrentUserEndpointAndInvalidateSessionOnLogout() throws Exception {
+        RegisterRequest registration = registerRequest("session-user", "session@example.com", "password123");
+        mockMvc.perform(post("/api/auth/register")
+                .contentType("application/json")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .content(objectMapper.writeValueAsString(registration)))
+            .andExpect(status().isOk());
+
+        var loginResult = mockMvc.perform(post("/api/auth/login")
+                .contentType("application/json")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .content(objectMapper.writeValueAsString(loginRequest("session-user", "password123"))))
+            .andExpect(status().isOk())
+            .andReturn();
+        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
+
+        mockMvc.perform(get("/api/auth/me").session(session))
+            .andExpect(status().isOk())
+            .andExpect(content().json("""
+                {"username":"session-user","email":"session@example.com"}
+                """));
+
+        mockMvc.perform(post("/api/auth/logout")
+                .session(session)
+                .with(SecurityMockMvcRequestPostProcessors.csrf()))
+            .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/auth/me").session(session))
+            .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -95,11 +133,13 @@ class UserAuthIntegrationIT {
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType("application/json")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .content(objectMapper.writeValueAsString(first)))
             .andExpect(status().isOk());
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType("application/json")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .content(objectMapper.writeValueAsString(second)))
             .andExpect(status().isBadRequest())
             .andExpect(content().string("Benutzername existiert bereits!"));
@@ -114,11 +154,13 @@ class UserAuthIntegrationIT {
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType("application/json")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .content(objectMapper.writeValueAsString(first)))
             .andExpect(status().isOk());
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType("application/json")
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
                 .content(objectMapper.writeValueAsString(second)))
             .andExpect(status().isBadRequest())
             .andExpect(content().string("E-Mail-Adresse existiert bereits!"));
@@ -130,6 +172,13 @@ class UserAuthIntegrationIT {
         RegisterRequest request = new RegisterRequest();
         request.setUsername(username);
         request.setEmail(email);
+        request.setPassword(password);
+        return request;
+    }
+
+    private LoginRequest loginRequest(String username, String password) {
+        LoginRequest request = new LoginRequest();
+        request.setUsername(username);
         request.setPassword(password);
         return request;
     }

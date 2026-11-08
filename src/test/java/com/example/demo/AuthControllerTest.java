@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -22,12 +24,19 @@ class AuthControllerTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private HttpServletRequest httpRequest;
+
+    @Mock
+    private HttpSession httpSession;
+
     private AuthController controller;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         controller = new AuthController(userRepository, passwordEncoder);
+        org.mockito.Mockito.when(httpRequest.getSession(true)).thenReturn(httpSession);
     }
 
     @Test
@@ -37,7 +46,7 @@ class AuthControllerTest {
         when(userRepository.findByEmail("johannes@example.com")).thenReturn(null);
         when(passwordEncoder.encode("password123")).thenReturn("encoded-password");
 
-        var response = controller.registerUser(request);
+        var response = controller.registerUser(request, httpRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Erfolgreich registriert!", response.getBody());
@@ -57,7 +66,7 @@ class AuthControllerTest {
         existingUser.setUsername("johannes");
         when(userRepository.findByUsername("johannes")).thenReturn(existingUser);
 
-        var response = controller.registerUser(request);
+        var response = controller.registerUser(request, httpRequest);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("Benutzername existiert bereits!", response.getBody());
@@ -72,7 +81,7 @@ class AuthControllerTest {
         when(userRepository.findByUsername("new-user")).thenReturn(null);
         when(userRepository.findByEmail("johannes@example.com")).thenReturn(existingUser);
 
-        var response = controller.registerUser(request);
+        var response = controller.registerUser(request, httpRequest);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("E-Mail-Adresse existiert bereits!", response.getBody());
@@ -88,7 +97,7 @@ class AuthControllerTest {
         when(userRepository.findByUsername("johannes")).thenReturn(user);
         when(passwordEncoder.matches("password123", "encoded-password")).thenReturn(true);
 
-        var response = controller.loginUser(request);
+        var response = controller.loginUser(request, httpRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Erfolgreich eingeloggt!", response.getBody());
@@ -103,10 +112,10 @@ class AuthControllerTest {
         when(userRepository.findByUsername("johannes")).thenReturn(user);
         when(passwordEncoder.matches("wrong-password", "encoded-password")).thenReturn(false);
 
-        var response = controller.loginUser(request);
+        var response = controller.loginUser(request, httpRequest);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Falsches Passwort!", response.getBody());
+        assertEquals("Ungültige Zugangsdaten.", response.getBody());
     }
 
     @Test
@@ -114,10 +123,10 @@ class AuthControllerTest {
         LoginRequest request = loginRequest("unknown", "password123");
         when(userRepository.findByUsername("unknown")).thenReturn(null);
 
-        var response = controller.loginUser(request);
+        var response = controller.loginUser(request, httpRequest);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Benutzer nicht gefunden!", response.getBody());
+        assertEquals("Ungültige Zugangsdaten.", response.getBody());
         verify(passwordEncoder, never()).matches(any(String.class), any(String.class));
     }
 

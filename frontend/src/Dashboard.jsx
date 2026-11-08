@@ -15,6 +15,7 @@ import {
   User,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { apiFetch, getCsrfToken } from './api';
 import './Dashboard.css';
 
 const navigationCategories = [
@@ -27,28 +28,42 @@ const navigationCategories = [
 
 function Dashboard() {
   const navigate = useNavigate();
-  const [currentUsername, setCurrentUsername] = useState(
-    () => localStorage.getItem('username') || sessionStorage.getItem('username') || '',
-  );
-  const [newUsername, setNewUsername] = useState(
-    () => localStorage.getItem('username') || sessionStorage.getItem('username') || '',
-  );
+  const [currentUsername, setCurrentUsername] = useState('');
+  const [newUsername, setNewUsername] = useState('');
+  const [currentEmail, setCurrentEmail] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All Items');
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
-    if (!currentUsername) {
-      navigate('/');
-    }
-  }, [currentUsername, navigate]);
+    const loadCurrentUser = async () => {
+      try {
+        await getCsrfToken();
+        const response = await apiFetch('/api/auth/me');
+        if (!response.ok) {
+          navigate('/');
+          return;
+        }
+        const user = await response.json();
+        setCurrentUsername(user.username);
+        setNewUsername(user.username);
+        setCurrentEmail(user.email);
+        setNewEmail(user.email);
+      } catch {
+        navigate('/');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadCurrentUser();
+  }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('username');
-    sessionStorage.removeItem('username');
-    navigate('/');
+    apiFetch('/api/auth/logout', { method: 'POST' })
+      .finally(() => navigate('/'));
   };
 
   const handleProfileUpdate = async (event) => {
@@ -56,10 +71,10 @@ function Dashboard() {
     setMessage('');
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/update`, {
+      const response = await apiFetch('/api/auth/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentUsername, newUsername, newEmail }),
+        body: JSON.stringify({ newUsername, newEmail }),
       });
       const text = await response.text();
 
@@ -68,8 +83,8 @@ function Dashboard() {
         return;
       }
 
-      localStorage.setItem('username', newUsername);
       setCurrentUsername(newUsername);
+      setCurrentEmail(newEmail || currentEmail);
       setMessage('Profil erfolgreich aktualisiert!');
     } catch {
       setMessage('Netzwerkfehler: Backend nicht erreichbar.');
@@ -85,6 +100,10 @@ function Dashboard() {
       return matchesCategory && matchesSearch;
     });
   }, [activeCategory, searchQuery]);
+
+  if (isLoading) {
+    return <div className="vault-loading">Loading Secure Vault...</div>;
+  }
 
   return (
     <div className="vault-shell">

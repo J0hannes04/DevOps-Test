@@ -8,12 +8,22 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
+
+    private final UserRepository userRepository;
+
+    public SecurityConfig(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -28,7 +38,8 @@ public class SecurityConfig {
             "http://localhost:8080"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Content-Type"));
+        configuration.setAllowedHeaders(List.of("Content-Type", "X-XSRF-TOKEN"));
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -37,13 +48,22 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
+        http.csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
             .cors(cors -> {})
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/team").permitAll()
-                .requestMatchers("/api/auth/**").permitAll() // Registrierung & Login sind öffentlich
+                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/csrf").permitAll()
                 .anyRequest().authenticated()
-            );
+            )
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+            )
+            .addFilterBefore(
+                new SessionAuthenticationFilter(userRepository),
+                UsernamePasswordAuthenticationFilter.class
+            )
+            .logout(logout -> logout.disable());
         return http.build();
     }
 }

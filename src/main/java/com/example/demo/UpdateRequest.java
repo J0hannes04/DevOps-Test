@@ -6,10 +6,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class UpdateRequest {
-    @NotBlank
-    @Size(max = 50)
-    private String currentUsername;
-
     @Size(min = 3, max = 50)
     @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Benutzername enthält ungültige Zeichen")
     private String newUsername;
@@ -19,9 +15,6 @@ public class UpdateRequest {
     private String newEmail;
 
     // Getter und Setter
-    public String getCurrentUsername() { return currentUsername; }
-    public void setCurrentUsername(String currentUsername) { this.currentUsername = currentUsername; }
-
     public String getNewUsername() { return newUsername; }
     public void setNewUsername(String newUsername) { this.newUsername = newUsername; }
 

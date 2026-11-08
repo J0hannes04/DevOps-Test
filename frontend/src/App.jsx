@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, Lock, Mail, ShieldCheck, User } from 'lucide-react';
+import { apiFetch, getCsrfToken } from './api';
 import './App.css';
 
 function App() {
@@ -10,6 +11,12 @@ function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    getCsrfToken().catch(() => {
+      setMessage('Sicherheits-Token konnte nicht geladen werden.');
+    });
+  }, []);
 
   const clearFields = () => {
     setUsername('');
@@ -23,14 +30,12 @@ function App() {
     setMessage('');
 
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'; 
-    const url = `${import.meta.env.VITE_API_URL || ''}${endpoint}`;
-
     const payload = isLogin 
       ? { username, password } 
       : { username, email, password };
 
     try {
-      const response = await fetch(url, {
+      const response = await apiFetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -41,9 +46,7 @@ function App() {
       const text = await response.text();
 
       if (response.ok) {
-  // Egal ob Sign In oder Sign Up: Direkt einloggen und weiterleiten!
-  localStorage.setItem('username', username);
-  navigate('/dashboard');
+        navigate('/dashboard');
 } else {
   setMessage(`Fehler: ${text}`);
 }
