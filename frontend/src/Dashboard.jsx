@@ -185,7 +185,7 @@ function Dashboard() {
               <form className="profile-form" onSubmit={handleProfileUpdate} autoComplete="off">
                 <label>
                   Username
-                  <input value={newUsername} onChange={(event) => setNewUsername(event.target.value)} minLength={3} maxLength={50} pattern="[a-zA-Z0-9._-]+" required />
+                  <input value={newUsername} onChange={(event) => setNewUsername(event.target.value)} minLength={3} maxLength={50} pattern="[a-zA-Z0-9._\-]+" required />
                 </label>
                 <label>
                   New email address
