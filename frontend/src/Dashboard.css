@@ -20,7 +20,7 @@
 .storage-progress{width:0;height:100%;border-radius:inherit;background:#3b82f6}
 .storage-card p{margin:10px 0 0;color:#6f7789;font-size:10px;line-height:1.4}
 .vault-content{display:flex;flex:1;min-width:0;flex-direction:column}
-.vault-topbar{display:flex;align-items:center;justify-content:space-between;gap:24px;height:96px;padding:0 40px;border-bottom:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.2);backdrop-filter:blur(16px)}
+.vault-topbar{position:relative;display:flex;align-items:center;justify-content:space-between;gap:24px;height:96px;padding:0 40px;border-bottom:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.2);backdrop-filter:blur(16px)}
 .vault-search{position:relative;display:flex;align-items:center;width:min(520px,100%);color:#667085}
 .vault-search>svg{position:absolute;left:16px}
 .vault-search input{width:100%;padding:14px 90px 14px 47px;border:1px solid rgba(255,255,255,.06);border-radius:12px;outline:0;background:#0d0a14;color:#fff;font:inherit;font-size:13px;box-shadow:inset 0 2px 6px rgba(0,0,0,.2)}
@@ -52,9 +52,10 @@
 .empty-icon{display:grid;place-items:center;width:62px;height:62px;margin-bottom:18px;border-radius:17px;background:#1c162d;color:#788398}
 .vault-empty-state h2{margin:0 0 8px;font-size:18px}
 .vault-empty-state p{margin:0 0 22px;color:#8992a4;font-size:13px}
-.profile-panel{margin-top:24px;padding:22px;border:1px solid rgba(255,255,255,.1);border-radius:15px;background:rgba(0,0,0,.35);backdrop-filter:blur(18px)}
-.profile-panel-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.profile-panel{position:absolute;z-index:5;top:78px;right:40px;width:min(390px,calc(100vw - 32px));padding:22px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(13,2,31,.94);backdrop-filter:blur(20px);box-shadow:0 22px 50px rgba(0,0,0,.5)}
+.profile-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:18px}
 .profile-panel-heading h2{margin:0;font-size:17px}
+.profile-eyebrow{margin:0 0 5px;color:#8da7ff;font-size:10px;font-weight:700;letter-spacing:.18em}
 .logout-button{display:flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:#0d0a14;color:#c5ccda;cursor:pointer}
 .profile-form{display:flex;align-items:flex-end;gap:14px}
 .profile-form label{flex:1;color:#a9b0c0;font-size:11px}
@@ -62,4 +63,4 @@
 .form-message{color:#55d99b;font-size:13px}
 @media(max-width:1100px){.vault-item-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){.vault-sidebar{width:220px}.vault-topbar{padding:0 24px}.vault-page{padding:30px 24px}}
-@media(max-width:650px){.vault-shell{display:block}.vault-sidebar{width:auto}.vault-logo{height:76px;padding:0 20px}.vault-navigation{display:flex;gap:6px;overflow-x:auto;padding:14px 12px}.navigation-label{display:none}.navigation-item{width:auto;flex-shrink:0;margin:0;padding:10px 12px}.navigation-item span{font-size:12px}.storage-card{display:none}.vault-topbar{height:auto;align-items:stretch;flex-direction:column;padding:18px 16px}.vault-profile{justify-content:flex-end}.vault-page{padding:25px 16px}.vault-page-heading{align-items:flex-start;flex-direction:column}.primary-button{width:100%}.vault-item-grid{grid-template-columns:1fr}.profile-form{align-items:stretch;flex-direction:column}.profile-form .primary-button{width:100%}}
+@media(max-width:650px){.vault-shell{display:block}.vault-sidebar{width:auto}.vault-logo{height:76px;padding:0 20px}.vault-navigation{display:flex;gap:6px;overflow-x:auto;padding:14px 12px}.navigation-label{display:none}.navigation-item{width:auto;flex-shrink:0;margin:0;padding:10px 12px}.navigation-item span{font-size:12px}.storage-card{display:none}.vault-topbar{height:auto;align-items:stretch;flex-direction:column;padding:18px 16px}.vault-profile{justify-content:flex-end}.profile-panel{top:128px;right:16px}.vault-page{padding:25px 16px}.vault-page-heading{align-items:flex-start;flex-direction:column}.primary-button{width:100%}.vault-item-grid{grid-template-columns:1fr}.profile-form{align-items:stretch;flex-direction:column}.profile-form .primary-button{width:100%}}

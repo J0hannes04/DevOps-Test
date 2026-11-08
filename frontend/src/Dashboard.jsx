@@ -147,10 +147,36 @@ function Dashboard() {
               onClick={() => setShowProfile(!showProfile)}
               type="button"
               aria-label="Profil öffnen"
+              aria-expanded={showProfile}
             >
               <User size={19} />
             </button>
           </div>
+          {showProfile && (
+            <section className="profile-panel">
+              <div className="profile-panel-heading">
+                <div>
+                  <p className="profile-eyebrow">ACCOUNT</p>
+                  <h2>Profile</h2>
+                </div>
+                <button className="logout-button" onClick={handleLogout} type="button">
+                  <LogOut size={16} /> Sign out
+                </button>
+              </div>
+              <form className="profile-form" onSubmit={handleProfileUpdate} autoComplete="off">
+                <label>
+                  Username
+                  <input value={newUsername} onChange={(event) => setNewUsername(event.target.value)} minLength={3} maxLength={50} pattern="[a-zA-Z0-9._-]+" required />
+                </label>
+                <label>
+                  New email address
+                  <input type="email" value={newEmail} onChange={(event) => setNewEmail(event.target.value)} maxLength={254} placeholder="Optional" />
+                </label>
+                <button className="primary-button" type="submit">Save changes</button>
+              </form>
+              {message && <p className="form-message">{message}</p>}
+            </section>
+          )}
         </header>
 
         <div className="vault-page">
@@ -190,28 +216,6 @@ function Dashboard() {
             </section>
           )}
 
-          {showProfile && (
-            <section className="profile-panel">
-              <div className="profile-panel-heading">
-                <h2>Profile</h2>
-                <button className="logout-button" onClick={handleLogout} type="button">
-                  <LogOut size={16} /> Sign out
-                </button>
-              </div>
-              <form className="profile-form" onSubmit={handleProfileUpdate} autoComplete="off">
-                <label>
-                  Username
-                  <input value={newUsername} onChange={(event) => setNewUsername(event.target.value)} minLength={3} maxLength={50} pattern="[a-zA-Z0-9._-]+" required />
-                </label>
-                <label>
-                  New email address
-                  <input type="email" value={newEmail} onChange={(event) => setNewEmail(event.target.value)} maxLength={254} placeholder="Optional" />
-                </label>
-                <button className="primary-button" type="submit">Save</button>
-              </form>
-              {message && <p className="form-message">{message}</p>}
-            </section>
-          )}
         </div>
       </main>
     </div>
