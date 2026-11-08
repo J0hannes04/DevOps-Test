@@ -1,4 +1,6 @@
-.vault-shell{position:relative;display:flex;min-height:100vh;overflow:hidden;background:linear-gradient(135deg,#0b0014,#0d021f 55%,#130029);color:#fff;font-family:inherit}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.vault-shell{position:relative;display:flex;min-height:100vh;overflow:hidden;background:linear-gradient(135deg,#0b0014,#0d021f 55%,#130029);color:#fff;font-family:'Inter',sans-serif}
 .vault-shell::before,.vault-shell::after{position:absolute;width:420px;height:420px;border-radius:50%;filter:blur(120px);opacity:.2;pointer-events:none;content:""}
 .vault-shell::before{top:-190px;left:18%;background:#7e22ce}
 .vault-shell::after{right:12%;bottom:-200px;background:#2563eb}
