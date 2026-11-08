@@ -1,45 +1,48 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  Clock3,
+  Activity,
   CreditCard,
   EyeOff,
-  FileKey2,
-  HeartPulse,
-  KeyRound,
-  LockKeyhole,
+  FileText,
+  Key,
+  LayoutGrid,
+  Lock,
   LogOut,
+  MoreVertical,
   Plus,
-  Settings,
-  ShieldCheck,
-  UserRound,
-  UserRoundCheck,
+  Search,
+  Shield,
+  User,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
-const categories = [
-  { id: 'identity', label: 'Identity', description: 'Ausweise und persönliche Dokumente', icon: UserRoundCheck, color: 'blue', count: 0 },
-  { id: 'finance', label: 'Finance', description: 'Bankdaten und Finanzinformationen', icon: CreditCard, color: 'green', count: 0 },
-  { id: 'health', label: 'Health', description: 'Gesundheitsdaten und wichtige Unterlagen', icon: HeartPulse, color: 'pink', count: 0 },
-  { id: 'keys', label: 'Keys', description: 'Lizenzen, Zugangsdaten und Recovery-Codes', icon: KeyRound, color: 'purple', count: 0 },
+const navigationCategories = [
+  { name: 'All Items', icon: LayoutGrid },
+  { name: 'Passwords', icon: Key },
+  { name: 'Financial', icon: CreditCard },
+  { name: 'Identity & Docs', icon: FileText },
+  { name: 'Security Audit', icon: Activity },
 ];
 
 function Dashboard() {
   const navigate = useNavigate();
   const [currentUsername, setCurrentUsername] = useState(
-    () => localStorage.getItem('username') || sessionStorage.getItem('username') || ''
+    () => localStorage.getItem('username') || sessionStorage.getItem('username') || '',
   );
   const [newUsername, setNewUsername] = useState(
-    () => localStorage.getItem('username') || sessionStorage.getItem('username') || ''
+    () => localStorage.getItem('username') || sessionStorage.getItem('username') || '',
   );
   const [newEmail, setNewEmail] = useState('');
   const [message, setMessage] = useState('');
-  const [activeCategory, setActiveCategory] = useState('identity');
-  const [isVaultUnlocked, setIsVaultUnlocked] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('All Items');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
-    if (!currentUsername) navigate('/');
+    if (!currentUsername) {
+      navigate('/');
+    }
   }, [currentUsername, navigate]);
 
   const handleLogout = () => {
@@ -73,122 +76,143 @@ function Dashboard() {
     }
   };
 
-  const activeCategoryData = categories.find((category) => category.id === activeCategory);
+  const filteredItems = useMemo(() => {
+    // Vault items will be loaded from the encrypted vault API in a later step.
+    const vaultItems = [];
+    return vaultItems.filter((item) => {
+      const matchesCategory = activeCategory === 'All Items' || item.category === activeCategory;
+      const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [activeCategory, searchQuery]);
 
   return (
-    <div className="vault-container">
-      <header className="vault-header">
-        <div className="vault-brand">
-          <div className="vault-brand-icon"><ShieldCheck size={23} /></div>
+    <div className="vault-shell">
+      <aside className="vault-sidebar">
+        <div className="vault-logo">
+          <div className="vault-logo-icon"><Shield size={20} /></div>
           <span>Secure Vault</span>
         </div>
-        <div className="vault-user-menu">
-          <button className="header-icon-btn" onClick={() => setShowProfile(!showProfile)} aria-label="Profil öffnen">
-            <UserRound size={18} />
-          </button>
-          <span>{currentUsername}</span>
-          <button className="vault-logout-btn" onClick={handleLogout}><LogOut size={16} /> Abmelden</button>
-        </div>
-      </header>
 
-      <main className="vault-main">
-        <section className="vault-welcome">
-          <div>
-            <p className="vault-eyebrow">PRIVATE SPACE</p>
-            <h1>Dein sicherer Tresor</h1>
-            <p className="vault-subtitle">Organisiere sensible Informationen an einem privaten Ort.</p>
-          </div>
-          <div className={`vault-state ${isVaultUnlocked ? 'is-unlocked' : ''}`}>
-            <LockKeyhole size={18} />
-            <span>{isVaultUnlocked ? 'Tresor geöffnet' : 'Tresor gesperrt'}</span>
-          </div>
-        </section>
-
-        <section className="vault-hero-card">
-          <div className="vault-hero-icon"><ShieldCheck size={36} /></div>
-          <div className="vault-hero-copy">
-            <p className="vault-eyebrow">ZERO-KNOWLEDGE VAULT</p>
-            <h2>{isVaultUnlocked ? 'Dein Tresor ist bereit.' : 'Deine Daten bleiben privat.'}</h2>
-            <p>
-              {isVaultUnlocked
-                ? 'Wähle eine Kategorie aus oder lege deinen ersten Eintrag an.'
-                : 'Entsperre den Tresor, um deine verschlüsselten Kategorien zu verwalten.'}
-            </p>
-          </div>
-          <button className="vault-primary-btn" onClick={() => setIsVaultUnlocked(!isVaultUnlocked)}>
-            <LockKeyhole size={17} />
-            {isVaultUnlocked ? 'Tresor sperren' : 'Tresor öffnen'}
-          </button>
-        </section>
-
-        <div className="vault-section-heading">
-          <div>
-            <h2>Deine Safes</h2>
-            <p>Strukturiere deine sensiblen Daten nach Kategorien.</p>
-          </div>
-          <button className="vault-secondary-btn" disabled={!isVaultUnlocked}>
-            <Plus size={17} /> Neuer Eintrag
-          </button>
-        </div>
-
-        <section className="safe-grid">
-          {categories.map((category) => {
+        <nav className="vault-navigation" aria-label="Vault-Kategorien">
+          <p className="navigation-label">Categories</p>
+          {navigationCategories.map((category) => {
             const Icon = category.icon;
-            const isActive = activeCategory === category.id;
+            const isActive = activeCategory === category.name;
             return (
               <button
-                className={`safe-card ${isActive ? 'active' : ''}`}
-                key={category.id}
-                onClick={() => setActiveCategory(category.id)}
+                className={`navigation-item ${isActive ? 'active' : ''}`}
+                key={category.name}
+                onClick={() => setActiveCategory(category.name)}
+                type="button"
               >
-                <div className={`safe-icon ${category.color}`}><Icon size={22} /></div>
-                <div className="safe-card-copy">
-                  <h3>{category.label}</h3>
-                  <p>{category.description}</p>
-                </div>
-                <span className="safe-count">{category.count}</span>
+                <Icon size={19} />
+                <span>{category.name}</span>
               </button>
             );
           })}
-        </section>
+        </nav>
 
-        <section className="vault-content-grid">
-          <article className="vault-panel">
-            <div className="vault-panel-heading">
-              <div>
-                <p className="vault-eyebrow">SELECTED SAFE</p>
-                <h2>{activeCategoryData.label}</h2>
+        <div className="storage-card">
+          <div className="storage-heading">
+            <span>Encrypted Storage</span>
+            <span>--</span>
+          </div>
+          <div className="storage-track"><div className="storage-progress" /></div>
+          <p>Wird nach der Einrichtung angezeigt.</p>
+        </div>
+      </aside>
+
+      <main className="vault-content">
+        <header className="vault-topbar">
+          <div className="vault-search">
+            <Search size={19} />
+            <input
+              type="search"
+              placeholder="Search encrypted vault..."
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              aria-label="Tresor durchsuchen"
+            />
+            <span className="local-indicator"><Lock size={12} /> Local</span>
+          </div>
+
+          <div className="vault-profile">
+            <div className="profile-name">
+              <strong>{currentUsername}</strong>
+              <span>Personal Vault</span>
+            </div>
+            <button
+              className="profile-button"
+              onClick={() => setShowProfile(!showProfile)}
+              type="button"
+              aria-label="Profil öffnen"
+            >
+              <User size={19} />
+            </button>
+          </div>
+        </header>
+
+        <div className="vault-page">
+          <div className="vault-page-heading">
+            <div>
+              <h1>{activeCategory}</h1>
+              <p>Securely manage and view your private data.</p>
+            </div>
+            <button className="primary-button" type="button" disabled>
+              <Plus size={18} /> New Entry
+            </button>
+          </div>
+
+          {filteredItems.length > 0 ? (
+            <div className="vault-item-grid">
+              {filteredItems.map((item) => (
+                <article className="vault-item-card" key={item.id}>
+                  <div className="item-card-heading">
+                    <div>
+                      <h2>{item.title}</h2>
+                      <span>{item.category}</span>
+                    </div>
+                    <button type="button" aria-label="Eintrag öffnen"><MoreVertical size={19} /></button>
+                  </div>
+                  <div className="item-secret"><code>{item.secret}</code><EyeOff size={16} /></div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <section className="vault-empty-state">
+              <div className="empty-icon"><EyeOff size={27} /></div>
+              <h2>No entries found</h2>
+              <p>Your encrypted vault is ready for its first entry.</p>
+              <button className="primary-button" type="button" disabled>
+                <Plus size={18} /> New Entry
+              </button>
+            </section>
+          )}
+
+          {showProfile && (
+            <section className="profile-panel">
+              <div className="profile-panel-heading">
+                <h2>Profile</h2>
+                <button className="logout-button" onClick={handleLogout} type="button">
+                  <LogOut size={16} /> Sign out
+                </button>
               </div>
-              <FileKey2 size={22} />
-            </div>
-            <div className="empty-safe">
-              <div className="empty-safe-icon"><EyeOff size={25} /></div>
-              <h3>Noch keine Einträge</h3>
-              <p>In diesem Safe wurden noch keine verschlüsselten Daten abgelegt.</p>
-              <button className="vault-primary-btn" disabled={!isVaultUnlocked}><Plus size={17} /> Eintrag hinzufügen</button>
-            </div>
-          </article>
-
-          <aside className="vault-panel security-panel">
-            <div className="vault-panel-heading"><h2>Sicherheitsstatus</h2><ShieldCheck size={21} /></div>
-            <div className="security-row"><span><LockKeyhole size={16} /> Tresorstatus</span><strong className={isVaultUnlocked ? 'green-text' : 'yellow-text'}>{isVaultUnlocked ? 'Geöffnet' : 'Gesperrt'}</strong></div>
-            <div className="security-row"><span><Clock3 size={16} /> Auto-Lock</span><strong>2 Minuten</strong></div>
-            <div className="security-row"><span><EyeOff size={16} /> Klartext auf Server</span><strong className="green-text">Nein</strong></div>
-            <p className="security-note">Dein Master-Passwort soll den Browser nicht verlassen.</p>
-          </aside>
-        </section>
-
-        {showProfile && (
-          <section className="vault-panel profile-panel">
-            <div className="vault-panel-heading"><h2><Settings size={19} /> Profil</h2></div>
-            <form className="profile-form" onSubmit={handleProfileUpdate} autoComplete="off">
-              <label>Benutzername<input value={newUsername} onChange={(event) => setNewUsername(event.target.value)} minLength={3} maxLength={50} pattern="[a-zA-Z0-9._-]+" required /></label>
-              <label>Neue E-Mail-Adresse<input type="email" value={newEmail} onChange={(event) => setNewEmail(event.target.value)} maxLength={254} placeholder="Optional" /></label>
-              <button className="vault-primary-btn" type="submit">Speichern</button>
-            </form>
-            {message && <p className="form-message">{message}</p>}
-          </section>
-        )}
+              <form className="profile-form" onSubmit={handleProfileUpdate} autoComplete="off">
+                <label>
+                  Username
+                  <input value={newUsername} onChange={(event) => setNewUsername(event.target.value)} minLength={3} maxLength={50} pattern="[a-zA-Z0-9._-]+" required />
+                </label>
+                <label>
+                  New email address
+                  <input type="email" value={newEmail} onChange={(event) => setNewEmail(event.target.value)} maxLength={254} placeholder="Optional" />
+                </label>
+                <button className="primary-button" type="submit">Save</button>
+              </form>
+              {message && <p className="form-message">{message}</p>}
+            </section>
+          )}
+        </div>
       </main>
     </div>
   );
