@@ -1,11 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import {
+  Clock3,
+  CreditCard,
+  EyeOff,
+  FileKey2,
+  HeartPulse,
+  KeyRound,
+  LockKeyhole,
+  LogOut,
+  Plus,
+  Settings,
+  ShieldCheck,
+  UserRound,
+  UserRoundCheck,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
+const categories = [
+  { id: 'identity', label: 'Identity', description: 'Ausweise und persönliche Dokumente', icon: UserRoundCheck, color: 'blue', count: 0 },
+  { id: 'finance', label: 'Finance', description: 'Bankdaten und Finanzinformationen', icon: CreditCard, color: 'green', count: 0 },
+  { id: 'health', label: 'Health', description: 'Gesundheitsdaten und wichtige Unterlagen', icon: HeartPulse, color: 'pink', count: 0 },
+  { id: 'keys', label: 'Keys', description: 'Lizenzen, Zugangsdaten und Recovery-Codes', icon: KeyRound, color: 'purple', count: 0 },
+];
+
 function Dashboard() {
   const navigate = useNavigate();
-  
-  // Neue States für unser Profil-Update
   const [currentUsername, setCurrentUsername] = useState(
     () => localStorage.getItem('username') || sessionStorage.getItem('username') || ''
   );
@@ -14,126 +34,161 @@ function Dashboard() {
   );
   const [newEmail, setNewEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [activeCategory, setActiveCategory] = useState('identity');
+  const [isVaultUnlocked, setIsVaultUnlocked] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
-  // Wird einmal beim Laden der Seite ausgeführt
   useEffect(() => {
-    // Prüfen, ob der User im Local- ODER SessionStorage steht
-    const loggedInUser = localStorage.getItem('username') || sessionStorage.getItem('username');
-    
-    if (!loggedInUser) {
-      navigate('/'); // Zurück zum Login, wenn nicht eingeloggt
-    }
-  }, [navigate]);
+    if (!currentUsername) navigate('/');
+  }, [currentUsername, navigate]);
 
   const handleLogout = () => {
-    // Beide Speicher leeren, egal wo der Haken gesetzt war
     localStorage.removeItem('username');
     sessionStorage.removeItem('username');
-    navigate('/'); 
+    navigate('/');
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
+  const handleProfileUpdate = async (event) => {
+    event.preventDefault();
     setMessage('');
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/update`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          currentUsername: currentUsername,
-          newUsername: newUsername,
-          newEmail: newEmail,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentUsername, newUsername, newEmail }),
       });
-
       const text = await response.text();
 
-      if (response.ok) {
-        setMessage('Profil erfolgreich aktualisiert!');
-        
-        // Den Namen im richtigen Storage aktualisieren
-        if (localStorage.getItem('username')) {
-          localStorage.setItem('username', newUsername);
-        } else if (sessionStorage.getItem('username')) {
-          sessionStorage.setItem('username', newUsername);
-        }
-        
-        // Anzeige oben rechts aktualisieren
-        setCurrentUsername(newUsername);
-      } else {
+      if (!response.ok) {
         setMessage(`Fehler: ${text}`);
+        return;
       }
+
+      localStorage.setItem('username', newUsername);
+      setCurrentUsername(newUsername);
+      setMessage('Profil erfolgreich aktualisiert!');
     } catch {
       setMessage('Netzwerkfehler: Backend nicht erreichbar.');
     }
   };
 
+  const activeCategoryData = categories.find((category) => category.id === activeCategory);
+
   return (
-    <div className="dashboard-container">
-      <header className="dashboard-header">
-        <h1>MaterialM Admin Dashboard</h1>
-        <div className="user-profile">
-          <span>Hallo, <strong>{currentUsername}</strong></span>
-          <button onClick={handleLogout} className="logout-btn">
-            Abmelden
+    <div className="vault-container">
+      <header className="vault-header">
+        <div className="vault-brand">
+          <div className="vault-brand-icon"><ShieldCheck size={23} /></div>
+          <span>Secure Vault</span>
+        </div>
+        <div className="vault-user-menu">
+          <button className="header-icon-btn" onClick={() => setShowProfile(!showProfile)} aria-label="Profil öffnen">
+            <UserRound size={18} />
           </button>
+          <span>{currentUsername}</span>
+          <button className="vault-logout-btn" onClick={handleLogout}><LogOut size={16} /> Abmelden</button>
         </div>
       </header>
 
-      <main className="dashboard-content">
-        {/* Deine bestehende Willkommens-Karte */}
-        <div className="welcome-card">
-          <h2>Herzlich Willkommen!</h2>
-          <p>Hier entsteht dein zukünftiges Dashboard mit Statistiken, Tabellen und Einstellungen.</p>
-        </div>
+      <main className="vault-main">
+        <section className="vault-welcome">
+          <div>
+            <p className="vault-eyebrow">PRIVATE SPACE</p>
+            <h1>Dein sicherer Tresor</h1>
+            <p className="vault-subtitle">Organisiere sensible Informationen an einem privaten Ort.</p>
+          </div>
+          <div className={`vault-state ${isVaultUnlocked ? 'is-unlocked' : ''}`}>
+            <LockKeyhole size={18} />
+            <span>{isVaultUnlocked ? 'Tresor geöffnet' : 'Tresor gesperrt'}</span>
+          </div>
+        </section>
 
-        {/* NEU: Die Karte für die Profil-Einstellungen */}
-        <div className="profile-card" style={{ marginTop: '20px', padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-          <h3>Profil bearbeiten</h3>
-          
-          <form onSubmit={handleUpdate} autoComplete="off" style={{ marginTop: '15px' }}>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Benutzername ändern</label>
-              <input 
-                type="text" 
-                value={newUsername} 
-                onChange={(e) => setNewUsername(e.target.value)} 
-                minLength={3}
-                maxLength={50}
-                pattern="[a-zA-Z0-9._-]+"
-                required 
-                style={{ padding: '8px', width: '100%', maxWidth: '300px', border: '1px solid #ccc', borderRadius: '4px' }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Neue E-Mail Adresse (optional)</label>
-              <input 
-                type="email" 
-                value={newEmail} 
-                onChange={(e) => setNewEmail(e.target.value)} 
-                placeholder="mail@beispiel.de"
-                maxLength={254}
-                style={{ padding: '8px', width: '100%', maxWidth: '300px', border: '1px solid #ccc', borderRadius: '4px' }}
-              />
-            </div>
-
-            <button type="submit" style={{ padding: '10px 15px', background: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-              Änderungen speichern
-            </button>
-          </form>
-          
-          {/* Erfolgs- oder Fehlermeldung */}
-          {message && (
-            <p style={{ marginTop: '15px', fontWeight: 'bold', color: message.includes('Fehler') || message.includes('fehler') ? 'red' : 'green' }}>
-              {message}
+        <section className="vault-hero-card">
+          <div className="vault-hero-icon"><ShieldCheck size={36} /></div>
+          <div className="vault-hero-copy">
+            <p className="vault-eyebrow">ZERO-KNOWLEDGE VAULT</p>
+            <h2>{isVaultUnlocked ? 'Dein Tresor ist bereit.' : 'Deine Daten bleiben privat.'}</h2>
+            <p>
+              {isVaultUnlocked
+                ? 'Wähle eine Kategorie aus oder lege deinen ersten Eintrag an.'
+                : 'Entsperre den Tresor, um deine verschlüsselten Kategorien zu verwalten.'}
             </p>
-          )}
+          </div>
+          <button className="vault-primary-btn" onClick={() => setIsVaultUnlocked(!isVaultUnlocked)}>
+            <LockKeyhole size={17} />
+            {isVaultUnlocked ? 'Tresor sperren' : 'Tresor öffnen'}
+          </button>
+        </section>
+
+        <div className="vault-section-heading">
+          <div>
+            <h2>Deine Safes</h2>
+            <p>Strukturiere deine sensiblen Daten nach Kategorien.</p>
+          </div>
+          <button className="vault-secondary-btn" disabled={!isVaultUnlocked}>
+            <Plus size={17} /> Neuer Eintrag
+          </button>
         </div>
 
+        <section className="safe-grid">
+          {categories.map((category) => {
+            const Icon = category.icon;
+            const isActive = activeCategory === category.id;
+            return (
+              <button
+                className={`safe-card ${isActive ? 'active' : ''}`}
+                key={category.id}
+                onClick={() => setActiveCategory(category.id)}
+              >
+                <div className={`safe-icon ${category.color}`}><Icon size={22} /></div>
+                <div className="safe-card-copy">
+                  <h3>{category.label}</h3>
+                  <p>{category.description}</p>
+                </div>
+                <span className="safe-count">{category.count}</span>
+              </button>
+            );
+          })}
+        </section>
+
+        <section className="vault-content-grid">
+          <article className="vault-panel">
+            <div className="vault-panel-heading">
+              <div>
+                <p className="vault-eyebrow">SELECTED SAFE</p>
+                <h2>{activeCategoryData.label}</h2>
+              </div>
+              <FileKey2 size={22} />
+            </div>
+            <div className="empty-safe">
+              <div className="empty-safe-icon"><EyeOff size={25} /></div>
+              <h3>Noch keine Einträge</h3>
+              <p>In diesem Safe wurden noch keine verschlüsselten Daten abgelegt.</p>
+              <button className="vault-primary-btn" disabled={!isVaultUnlocked}><Plus size={17} /> Eintrag hinzufügen</button>
+            </div>
+          </article>
+
+          <aside className="vault-panel security-panel">
+            <div className="vault-panel-heading"><h2>Sicherheitsstatus</h2><ShieldCheck size={21} /></div>
+            <div className="security-row"><span><LockKeyhole size={16} /> Tresorstatus</span><strong className={isVaultUnlocked ? 'green-text' : 'yellow-text'}>{isVaultUnlocked ? 'Geöffnet' : 'Gesperrt'}</strong></div>
+            <div className="security-row"><span><Clock3 size={16} /> Auto-Lock</span><strong>2 Minuten</strong></div>
+            <div className="security-row"><span><EyeOff size={16} /> Klartext auf Server</span><strong className="green-text">Nein</strong></div>
+            <p className="security-note">Dein Master-Passwort soll den Browser nicht verlassen.</p>
+          </aside>
+        </section>
+
+        {showProfile && (
+          <section className="vault-panel profile-panel">
+            <div className="vault-panel-heading"><h2><Settings size={19} /> Profil</h2></div>
+            <form className="profile-form" onSubmit={handleProfileUpdate} autoComplete="off">
+              <label>Benutzername<input value={newUsername} onChange={(event) => setNewUsername(event.target.value)} minLength={3} maxLength={50} pattern="[a-zA-Z0-9._-]+" required /></label>
+              <label>Neue E-Mail-Adresse<input type="email" value={newEmail} onChange={(event) => setNewEmail(event.target.value)} maxLength={254} placeholder="Optional" /></label>
+              <button className="vault-primary-btn" type="submit">Speichern</button>
+            </form>
+            {message && <p className="form-message">{message}</p>}
+          </section>
+        )}
       </main>
     </div>
   );

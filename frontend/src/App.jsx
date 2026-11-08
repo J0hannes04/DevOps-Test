@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Box, CheckCircle2, Lock, Mail, User } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Lock, Mail, ShieldCheck, User } from 'lucide-react';
 import './App.css';
 
 function App() {
@@ -60,16 +60,16 @@ function App() {
       <div className="auth-layout">
         <section className="brand-card">
           <div className="brand-header">
-            <div className="brand-icon"><Box size={28} /></div>
-            <span>MaterialM</span>
+            <div className="brand-icon"><ShieldCheck size={28} /></div>
+            <span>Secure Vault</span>
           </div>
 
-          <h1>Welcome to<br />a new dimension.</h1>
-          <p>MaterialM helps developers to build organized and well-coded dashboards full of beautiful and rich modules. Elevate your development process today.</p>
+          <h1>Your private data.<br />Secure by design.</h1>
+          <p>Secure Vault protects your sensitive information with a private, encrypted space designed for you. Keep your important data organized and under your control.</p>
 
           <div className="benefits">
-            <div><CheckCircle2 size={20} /> <span>Beautifully crafted modules</span></div>
-            <div><CheckCircle2 size={20} /> <span>Clean and organized code</span></div>
+            <div><CheckCircle2 size={20} /> <span>Private and encrypted storage</span></div>
+            <div><CheckCircle2 size={20} /> <span>Your data, under your control</span></div>
           </div>
 
           <button type="button" className="learn-more-btn">Learn More</button>
@@ -78,7 +78,7 @@ function App() {
         <section className="auth-card">
           <div className="form-header">
             <h2>{isLogin ? 'Sign In' : 'Create Account'}</h2>
-            <p>{isLogin ? 'Welcome back! Please enter your details.' : 'Let us get you set up with an account.'}</p>
+            <p>{isLogin ? 'Welcome back. Access your private vault.' : 'Create your private Secure Vault account.'}</p>
           </div>
 
           <form onSubmit={handleSubmit} autoComplete="off">
