@@ -61,6 +61,25 @@
 .profile-form label{flex:1;color:#a9b0c0;font-size:11px}
 .profile-form input{display:block;width:100%;margin-top:7px;padding:11px 12px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:#0d0a14;color:#fff;font:inherit}
 .form-message{color:#55d99b;font-size:13px}
+.heading-actions{display:flex;align-items:center;gap:10px}
+.secondary-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border:1px solid rgba(255,255,255,.16);border-radius:11px;background:rgba(255,255,255,.06);color:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.secondary-button:hover{background:rgba(255,255,255,.12)}
+.unlock-card{display:flex;align-items:center;justify-content:center;min-height:420px;flex-direction:column;padding:45px;border:1px solid rgba(255,255,255,.1);border-radius:20px;background:rgba(255,255,255,.05);backdrop-filter:blur(18px);text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.25)}
+.unlock-card h1{margin:0 0 10px;font-size:28px}
+.unlock-card p{max-width:470px;margin:0 0 25px;color:#aab1c0;font-size:13px;line-height:1.6}
+.unlock-card form{display:flex;gap:10px;width:min(470px,100%)}
+.unlock-card input,.entry-modal input,.entry-modal select,.entry-modal textarea{width:100%;padding:13px 14px;border:1px solid rgba(255,255,255,.12);border-radius:10px;outline:0;background:#0d0a14;color:#fff;font:inherit}
+.unlock-card input:focus,.entry-modal input:focus,.entry-modal select:focus,.entry-modal textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 1px #3b82f6}
+.form-error{color:#fca5a5!important}
+.item-secret button{display:grid;place-items:center;padding:3px;border:0;background:transparent;color:#8992a4;cursor:pointer}
+.entry-overlay{position:fixed;z-index:200;inset:0;display:grid;place-items:center;padding:20px;background:rgba(5,1,14,.72);backdrop-filter:blur(8px)}
+.entry-modal{width:min(500px,100%);padding:28px;border:1px solid rgba(255,255,255,.14);border-radius:20px;background:rgba(13,2,31,.98);box-shadow:0 30px 80px rgba(0,0,0,.65)}
+.entry-modal form{display:grid;gap:16px}
+.entry-modal label{display:grid;gap:7px;color:#b9c0cf;font-size:12px}
+.entry-modal textarea{min-height:150px;resize:vertical}
+.modal-close{border:0;background:transparent;color:#aab1c0;font-size:26px;line-height:1;cursor:pointer}
+.modal-close:hover{color:#fff}
+.vault-loading{display:grid;min-height:100vh;place-items:center;background:linear-gradient(135deg,#0b0014,#0d021f 55%,#130029);color:#fff;font-family:'Inter',sans-serif}
 @media(max-width:1100px){.vault-item-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){.vault-sidebar{width:220px}.vault-topbar{padding:0 24px}.vault-page{padding:30px 24px}}
-@media(max-width:650px){.vault-shell{display:block}.vault-sidebar{width:auto}.vault-logo{height:76px;padding:0 20px}.vault-navigation{display:flex;gap:6px;overflow-x:auto;padding:14px 12px}.navigation-label{display:none}.navigation-item{width:auto;flex-shrink:0;margin:0;padding:10px 12px}.navigation-item span{font-size:12px}.storage-card{display:none}.vault-topbar{height:auto;align-items:stretch;flex-direction:column;padding:18px 16px}.vault-profile{justify-content:flex-end}.profile-panel{top:128px;right:16px}.vault-page{padding:25px 16px}.vault-page-heading{align-items:flex-start;flex-direction:column}.primary-button{width:100%}.vault-item-grid{grid-template-columns:1fr}.profile-form{align-items:stretch;flex-direction:column}.profile-form .primary-button{width:100%}}
+@media(max-width:650px){.vault-shell{display:block}.vault-sidebar{width:auto}.vault-logo{height:76px;padding:0 20px}.vault-navigation{display:flex;gap:6px;overflow-x:auto;padding:14px 12px}.navigation-label{display:none}.navigation-item{width:auto;flex-shrink:0;margin:0;padding:10px 12px}.navigation-item span{font-size:12px}.storage-card{display:none}.vault-topbar{height:auto;align-items:stretch;flex-direction:column;padding:18px 16px}.vault-profile{justify-content:flex-end}.profile-panel{top:128px;right:16px}.vault-page{padding:25px 16px}.vault-page-heading{align-items:flex-start;flex-direction:column}.heading-actions{width:100%}.heading-actions button{flex:1}.primary-button{width:100%}.vault-item-grid{grid-template-columns:1fr}.profile-form{align-items:stretch;flex-direction:column}.profile-form .primary-button{width:100%}.unlock-card{padding:30px 18px}.unlock-card form{align-items:stretch;flex-direction:column}}
