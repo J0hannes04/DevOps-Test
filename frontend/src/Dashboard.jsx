@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Activity, CreditCard, Eye, EyeOff, FileText, Key, LayoutGrid, Lock,
-  LogOut, MoreVertical, Plus, Search, Shield, User,
+  Activity, AlertTriangle, CheckCircle2, CreditCard, Eye, EyeOff, FileText,
+  Key, LayoutGrid, Lock, LogOut, MoreVertical, Plus, Search, Shield, User,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch, getCsrfToken } from './api';
@@ -17,6 +17,13 @@ const navigationCategories = [
 ];
 
 const VAULT_IDLE_TIMEOUT_MS = 5 * 60 * 1000;
+
+const isWeakSecret = (secret) => {
+  const normalizedSecret = secret.trim().toLowerCase();
+  const commonSecrets = ['password', 'passwort', '123456', 'qwerty', 'letmein', 'welcome'];
+  return normalizedSecret.length < 12
+    || commonSecrets.some((commonSecret) => normalizedSecret.includes(commonSecret));
+};
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -35,6 +42,7 @@ function Dashboard() {
   const [unlockError, setUnlockError] = useState('');
   const [items, setItems] = useState([]);
   const [showNewEntry, setShowNewEntry] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
   const [entry, setEntry] = useState({ title: '', category: 'Passwords', secret: '' });
   const [revealedId, setRevealedId] = useState(null);
 
@@ -193,19 +201,48 @@ function Dashboard() {
         title: entry.title,
         secret: entry.secret,
       });
-      const response = await apiFetch('/api/vault/items', {
-        method: 'POST',
+      const response = await apiFetch(
+        editingItem ? `/api/vault/items/${editingItem.id}` : '/api/vault/items',
+        {
+        method: editingItem ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category: entry.category, ...encrypted }),
-      });
-      if (!response.ok) throw new Error('Eintrag konnte nicht gespeichert werden.');
+        },
+      );
+      if (!response.ok) throw new Error(editingItem ? 'Eintrag konnte nicht aktualisiert werden.' : 'Eintrag konnte nicht gespeichert werden.');
       const saved = await response.json();
-      setItems((current) => [...current, { ...saved, ...entry }]);
+      setItems((current) => editingItem
+        ? current.map((item) => item.id === editingItem.id ? { ...saved, ...entry } : item)
+        : [...current, { ...saved, ...entry }]);
       setEntry({ title: '', category: 'Passwords', secret: '' });
+      setEditingItem(null);
       setShowNewEntry(false);
     } catch (error) {
       setMessage(`Fehler: ${error.message}`);
     }
+  };
+
+  const openNewEntry = () => {
+    setEditingItem(null);
+    setEntry({ title: '', category: 'Passwords', secret: '' });
+    setShowNewEntry(true);
+  };
+
+  const openEditEntry = (item) => {
+    setEditingItem(item);
+    setEntry({ title: item.title, category: item.category, secret: item.secret });
+    setShowNewEntry(true);
+  };
+
+  const closeEntryModal = () => {
+    setEditingItem(null);
+    setShowNewEntry(false);
+  };
+
+  const reviewItem = (item) => {
+    setActiveCategory(item.category);
+    setSearchQuery('');
+    openEditEntry(item);
   };
 
   const filteredItems = useMemo(() => items.filter((item) => {
@@ -213,6 +250,25 @@ function Dashboard() {
     const searchMatches = item.title.toLowerCase().includes(searchQuery.toLowerCase());
     return categoryMatches && searchMatches;
   }), [activeCategory, items, searchQuery]);
+
+  const audit = useMemo(() => {
+    const passwordItems = items.filter((item) => item.category === 'Passwords');
+    const weakItems = passwordItems.filter((item) => isWeakSecret(item.secret));
+    const secretCounts = new Map();
+    passwordItems.forEach((item) => {
+      const normalizedSecret = item.secret.trim();
+      secretCounts.set(normalizedSecret, (secretCounts.get(normalizedSecret) || 0) + 1);
+    });
+    const duplicateItems = passwordItems.filter((item) => secretCounts.get(item.secret.trim()) > 1);
+    const issues = weakItems.length + duplicateItems.length;
+
+    return {
+      score: Math.max(0, 100 - issues * 10),
+      weakItems,
+      duplicateItems,
+      issueCount: issues,
+    };
+  }, [items]);
 
   if (isLoading) return <div className="vault-loading">Loading Secure Vault...</div>;
 
@@ -224,7 +280,7 @@ function Dashboard() {
           <p className="navigation-label">Categories</p>
           {navigationCategories.map((category) => {
             const Icon = category.icon;
-            return <button className={`navigation-item ${activeCategory === category.name ? 'active' : ''}`} key={category.name} onClick={() => setActiveCategory(category.name)} type="button"><Icon size={19} /><span>{category.name}</span></button>;
+            return <button className={`navigation-item ${activeCategory === category.name ? 'active' : ''}`} key={category.name} onClick={() => { setActiveCategory(category.name); setSearchQuery(''); }} type="button"><Icon size={19} /><span>{category.name}</span></button>;
           })}
         </nav>
         <div className="storage-card"><div className="storage-heading"><span>Encrypted Storage</span><span>{items.length}</span></div><div className="storage-track"><div className="storage-progress" style={{ width: `${Math.min(items.length * 10, 100)}%` }} /></div><p>Nur verschlüsselte Daten werden gespeichert.</p></div>
@@ -240,13 +296,71 @@ function Dashboard() {
         <div className="vault-page">
           {!vaultKey ? (
             <section className="unlock-card"><div className="empty-icon"><Lock size={27} /></div><h1>{isVaultInitialized ? 'Unlock your vault' : 'Set up your vault'}</h1><p>Your master password stays in this browser and is never sent to the server.</p><form onSubmit={unlockVault}><input type="password" placeholder="Master password" value={masterPassword} onChange={(event) => setMasterPassword(event.target.value)} minLength={8} required autoComplete="off" />{!isVaultInitialized && <input type="password" placeholder="Confirm master password" value={masterPasswordConfirmation} onChange={(event) => setMasterPasswordConfirmation(event.target.value)} minLength={8} required autoComplete="off" />}<button className="primary-button" type="submit"><Lock size={18} /> {isVaultInitialized ? 'Unlock Vault' : 'Create Vault Key'}</button></form>{unlockError && <p className="form-error">{unlockError}</p>}</section>
+          ) : activeCategory === 'Security Audit' ? (
+            <section className="audit-content">
+              <div className="audit-score-card">
+                <div>
+                  <h2>Vault Health Score</h2>
+                  <p>{audit.issueCount === 0 ? 'No issues found in your vault.' : `${audit.issueCount} issue${audit.issueCount === 1 ? '' : 's'} found requiring your attention.`}</p>
+                </div>
+                <div className="audit-score">
+                  <strong>{audit.score}<span>/100</span></strong>
+                  <div className={`audit-score-ring ${audit.score >= 80 ? 'good' : audit.score >= 50 ? 'warning' : 'critical'}`} />
+                </div>
+              </div>
+
+              {audit.weakItems.length > 0 ? (
+                <div className="audit-issue-card">
+                  <div className="audit-card-heading"><AlertTriangle size={22} /><h2>Weak Passwords Detected</h2></div>
+                  <div className="audit-item-list">
+                    {audit.weakItems.map((item) => (
+                      <div className="audit-item" key={item.id}>
+                        <div className="audit-item-icon"><Key size={18} /></div>
+                        <div><h3>{item.title}</h3><p>Password is short or matches a commonly guessed pattern.</p></div>
+                        <button className="secondary-button" type="button" onClick={() => reviewItem(item)}>Review item</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="audit-success-card">
+                  <CheckCircle2 size={21} />
+                  <div><h2>No weak passwords detected</h2><p>All password entries meet the local strength checks.</p></div>
+                </div>
+              )}
+
+              {audit.duplicateItems.length > 0 ? (
+                <div className="audit-issue-card">
+                  <div className="audit-card-heading"><AlertTriangle size={22} /><h2>Reused Passwords Detected</h2></div>
+                  <div className="audit-item-list">
+                    {audit.duplicateItems.map((item) => (
+                      <div className="audit-item" key={item.id}>
+                        <div className="audit-item-icon"><Key size={18} /></div>
+                        <div><h3>{item.title}</h3><p>This password is used by more than one vault entry.</p></div>
+                        <button className="secondary-button" type="button" onClick={() => reviewItem(item)}>Review item</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="audit-success-card">
+                  <CheckCircle2 size={21} />
+                  <div><h2>No reused passwords detected</h2><p>Each password entry uses a different secret.</p></div>
+                </div>
+              )}
+
+              <div className="audit-info-card">
+                <Activity size={21} />
+                <div><h2>Analysis runs locally</h2><p>Only decrypted entries already present in this browser are analyzed. Secrets are never sent to the server for the audit.</p></div>
+              </div>
+            </section>
           ) : (
             <>
-              <div className="vault-page-heading"><div><h1>{activeCategory}</h1><p>Your decrypted entries exist only while the vault is unlocked.</p></div><div className="heading-actions"><button className="secondary-button" type="button" onClick={lockVault}><Lock size={17} /> Lock</button><button className="primary-button" type="button" onClick={() => setShowNewEntry(true)}><Plus size={18} /> New Entry</button></div></div>
-              {filteredItems.length > 0 ? <div className="vault-item-grid">{filteredItems.map((item) => <article className="vault-item-card" key={item.id}><div className="item-card-heading"><div><h2>{item.title}</h2><span>{item.category}</span></div><button type="button" aria-label="Eintrag öffnen"><MoreVertical size={19} /></button></div><div className="item-secret"><code>{revealedId === item.id ? item.secret : '••••••••••••••••'}</code><button type="button" onClick={() => setRevealedId(revealedId === item.id ? null : item.id)} aria-label="Geheimnis anzeigen">{revealedId === item.id ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></article>)}</div> : <section className="vault-empty-state"><div className="empty-icon"><EyeOff size={27} /></div><h2>No entries found</h2><p>Your encrypted vault is ready for its first entry.</p><button className="primary-button" type="button" onClick={() => setShowNewEntry(true)}><Plus size={18} /> New Entry</button></section>}
+              <div className="vault-page-heading"><div><h1>{activeCategory}</h1><p>Your decrypted entries exist only while the vault is unlocked.</p></div><div className="heading-actions"><button className="secondary-button" type="button" onClick={lockVault}><Lock size={17} /> Lock</button><button className="primary-button" type="button" onClick={openNewEntry}><Plus size={18} /> New Entry</button></div></div>
+              {filteredItems.length > 0 ? <div className="vault-item-grid">{filteredItems.map((item) => <article className="vault-item-card" key={item.id}><div className="item-card-heading"><div><h2>{item.title}</h2><span>{item.category}</span></div><button type="button" aria-label={`Eintrag ${item.title} bearbeiten`} onClick={() => openEditEntry(item)}><MoreVertical size={19} /></button></div><div className="item-secret"><code>{revealedId === item.id ? item.secret : '••••••••••••••••'}</code><button type="button" onClick={() => setRevealedId(revealedId === item.id ? null : item.id)} aria-label="Geheimnis anzeigen">{revealedId === item.id ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></article>)}</div> : <section className="vault-empty-state"><div className="empty-icon"><EyeOff size={27} /></div><h2>No entries found</h2><p>Your encrypted vault is ready for its first entry.</p><button className="primary-button" type="button" onClick={openNewEntry}><Plus size={18} /> New Entry</button></section>}
             </>
           )}
-          {showNewEntry && <div className="entry-overlay"><section className="entry-modal"><div className="profile-panel-heading"><div><p className="profile-eyebrow">ENCRYPTED ENTRY</p><h2>New Entry</h2></div><button className="modal-close" type="button" onClick={() => setShowNewEntry(false)}>×</button></div><form onSubmit={createEntry}><label>Title<input value={entry.title} onChange={(event) => setEntry({ ...entry, title: event.target.value })} maxLength={120} required /></label><label>Category<select value={entry.category} onChange={(event) => setEntry({ ...entry, category: event.target.value })}>{navigationCategories.slice(1, 4).map((category) => <option key={category.name}>{category.name}</option>)}</select></label><label>Secret or private note<textarea value={entry.secret} onChange={(event) => setEntry({ ...entry, secret: event.target.value })} maxLength={10000} required /></label><button className="primary-button" type="submit">Encrypt and save</button></form></section></div>}
+          {showNewEntry && <div className="entry-overlay"><section className="entry-modal"><div className="profile-panel-heading"><div><p className="profile-eyebrow">ENCRYPTED ENTRY</p><h2>{editingItem ? 'Edit Entry' : 'New Entry'}</h2></div><button className="modal-close" type="button" onClick={closeEntryModal}>×</button></div><form onSubmit={createEntry}><label>Title<input value={entry.title} onChange={(event) => setEntry({ ...entry, title: event.target.value })} maxLength={120} required /></label><label>Category<select value={entry.category} onChange={(event) => setEntry({ ...entry, category: event.target.value })}>{navigationCategories.slice(1, 4).map((category) => <option key={category.name}>{category.name}</option>)}</select></label><label>Secret or private note<textarea value={entry.secret} onChange={(event) => setEntry({ ...entry, secret: event.target.value })} maxLength={10000} required /></label><button className="primary-button" type="submit">{editingItem ? 'Encrypt and update' : 'Encrypt and save'}</button></form></section></div>}
         </div>
       </main>
     </div>

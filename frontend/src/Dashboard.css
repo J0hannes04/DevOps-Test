@@ -64,6 +64,36 @@
 .heading-actions{display:flex;align-items:center;gap:10px}
 .secondary-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border:1px solid rgba(255,255,255,.16);border-radius:11px;background:rgba(255,255,255,.06);color:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .secondary-button:hover{background:rgba(255,255,255,.12)}
+.audit-content{display:flex;max-width:900px;flex-direction:column;gap:24px}
+.audit-score-card{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:28px;border:1px solid rgba(168,85,247,.35);border-radius:18px;background:rgba(18,0,41,.65);backdrop-filter:blur(16px)}
+.audit-score-card h2{margin:0 0 8px;font-size:21px}
+.audit-score-card p{margin:0;color:#aab1c0;font-size:13px}
+.audit-score{display:flex;align-items:center;gap:14px}
+.audit-score strong{color:#fbbf24;font-size:32px}
+.audit-score strong span{color:rgba(255,255,255,.35);font-size:16px}
+.audit-score-ring{position:relative;width:64px;height:64px;border-radius:50%;background:conic-gradient(from 0deg,#fbbf24 0 24%,rgba(251,191,36,.25) 24% 100%);animation:audit-ring-spin 2.8s linear infinite}
+.audit-score-ring::after{position:absolute;inset:4px;border-radius:50%;background:#120021;content:""}
+.audit-score-ring.good{background:conic-gradient(from 0deg,#34d399 0 24%,rgba(52,211,153,.3) 24% 100%)}
+.audit-score-ring.critical{background:conic-gradient(from 0deg,#f87171 0 24%,rgba(248,113,113,.3) 24% 100%)}
+@keyframes audit-ring-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.audit-score-ring{animation:none}}
+.audit-issue-card,.audit-success-card,.audit-info-card{padding:24px;border-radius:18px}
+.audit-issue-card{border:1px solid rgba(248,113,113,.3);background:rgba(127,29,29,.2)}
+.audit-card-heading{display:flex;align-items:center;gap:11px;margin-bottom:18px;color:#f87171}
+.audit-card-heading h2{margin:0;font-size:18px}
+.audit-item-list{display:flex;flex-direction:column;gap:12px}
+.audit-item{display:flex;align-items:center;gap:14px;padding:16px;border:1px solid rgba(248,113,113,.12);border-radius:12px;background:rgba(0,0,0,.3)}
+.audit-item-icon{display:grid;flex-shrink:0;place-items:center;width:40px;height:40px;border-radius:50%;background:rgba(248,113,113,.2);color:#f87171}
+.audit-item>div:nth-child(2){flex:1;min-width:0}
+.audit-item h3{margin:0 0 5px;font-size:14px}
+.audit-item p{margin:0;color:rgba(248,113,113,.7);font-size:11px}
+.audit-item .secondary-button{padding:9px 12px;font-size:11px}
+.audit-success-card,.audit-info-card{display:flex;align-items:flex-start;gap:12px;border:1px solid rgba(52,211,153,.3);background:rgba(6,78,59,.18);color:#34d399}
+.audit-success-card h2,.audit-info-card h2{margin:0 0 5px;color:#34d399;font-size:16px}
+.audit-success-card p,.audit-info-card p{margin:0;color:rgba(52,211,153,.7);font-size:12px;line-height:1.5}
+.audit-info-card{border-color:rgba(96,165,250,.3);background:rgba(30,64,175,.15);color:#60a5fa}
+.audit-info-card h2{color:#60a5fa}
+.audit-info-card p{color:rgba(96,165,250,.7)}
 .unlock-card{display:flex;align-items:center;justify-content:center;min-height:420px;flex-direction:column;padding:45px;border:1px solid rgba(255,255,255,.1);border-radius:20px;background:rgba(255,255,255,.05);backdrop-filter:blur(18px);text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.25)}
 .unlock-card h1{margin:0 0 10px;font-size:28px}
 .unlock-card p{max-width:470px;margin:0 0 25px;color:#aab1c0;font-size:13px;line-height:1.6}
