@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Activity, AlertTriangle, CheckCircle2, CreditCard, Eye, EyeOff, FileText,
-  Key, LayoutGrid, Lock, LogOut, MoreVertical, Plus, Search, Shield, User,
+  Key, LayoutGrid, Lock, LogOut, MoreVertical, Plus, Search, Shield, User, WandSparkles,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch, getCsrfToken } from './api';
 import { decryptVaultPayload, deriveVaultKey, encryptVerifier, encryptVaultPayload } from './crypto';
+import PasswordGenerator from './PasswordGenerator';
 import './Dashboard.css';
 
 const navigationCategories = [
@@ -43,6 +44,8 @@ function Dashboard() {
   const [items, setItems] = useState([]);
   const [showNewEntry, setShowNewEntry] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [showGenerator, setShowGenerator] = useState(false);
+  const [showInlineGenerator, setShowInlineGenerator] = useState(false);
   const [entry, setEntry] = useState({ title: '', category: 'Passwords', secret: '' });
   const [revealedId, setRevealedId] = useState(null);
 
@@ -245,6 +248,12 @@ function Dashboard() {
     openEditEntry(item);
   };
 
+  const useGeneratedSecret = (secret) => {
+    setEntry((current) => ({ ...current, secret }));
+    setShowInlineGenerator(false);
+    setShowGenerator(false);
+  };
+
   const filteredItems = useMemo(() => items.filter((item) => {
     const categoryMatches = activeCategory === 'All Items' || item.category === activeCategory;
     const searchMatches = item.title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -282,6 +291,7 @@ function Dashboard() {
             const Icon = category.icon;
             return <button className={`navigation-item ${activeCategory === category.name ? 'active' : ''}`} key={category.name} onClick={() => { setActiveCategory(category.name); setSearchQuery(''); }} type="button"><Icon size={19} /><span>{category.name}</span></button>;
           })}
+          <button className={`navigation-item ${showGenerator ? 'active' : ''}`} type="button" onClick={() => setShowGenerator(true)}><WandSparkles size={19} /><span>Generator</span></button>
         </nav>
         <div className="storage-card"><div className="storage-heading"><span>Encrypted Storage</span><span>{items.length}</span></div><div className="storage-track"><div className="storage-progress" style={{ width: `${Math.min(items.length * 10, 100)}%` }} /></div><p>Nur verschlüsselte Daten werden gespeichert.</p></div>
       </aside>
@@ -360,7 +370,8 @@ function Dashboard() {
               {filteredItems.length > 0 ? <div className="vault-item-grid">{filteredItems.map((item) => <article className="vault-item-card" key={item.id}><div className="item-card-heading"><div><h2>{item.title}</h2><span>{item.category}</span></div><button type="button" aria-label={`Eintrag ${item.title} bearbeiten`} onClick={() => openEditEntry(item)}><MoreVertical size={19} /></button></div><div className="item-secret"><code>{revealedId === item.id ? item.secret : '••••••••••••••••'}</code><button type="button" onClick={() => setRevealedId(revealedId === item.id ? null : item.id)} aria-label="Geheimnis anzeigen">{revealedId === item.id ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></article>)}</div> : <section className="vault-empty-state"><div className="empty-icon"><EyeOff size={27} /></div><h2>No entries found</h2><p>Your encrypted vault is ready for its first entry.</p><button className="primary-button" type="button" onClick={openNewEntry}><Plus size={18} /> New Entry</button></section>}
             </>
           )}
-          {showNewEntry && <div className="entry-overlay"><section className="entry-modal"><div className="profile-panel-heading"><div><p className="profile-eyebrow">ENCRYPTED ENTRY</p><h2>{editingItem ? 'Edit Entry' : 'New Entry'}</h2></div><button className="modal-close" type="button" onClick={closeEntryModal}>×</button></div><form onSubmit={createEntry}><label>Title<input value={entry.title} onChange={(event) => setEntry({ ...entry, title: event.target.value })} maxLength={120} required /></label><label>Category<select value={entry.category} onChange={(event) => setEntry({ ...entry, category: event.target.value })}>{navigationCategories.slice(1, 4).map((category) => <option key={category.name}>{category.name}</option>)}</select></label><label>Secret or private note<textarea value={entry.secret} onChange={(event) => setEntry({ ...entry, secret: event.target.value })} maxLength={10000} required /></label><button className="primary-button" type="submit">{editingItem ? 'Encrypt and update' : 'Encrypt and save'}</button></form></section></div>}
+          {showNewEntry && <div className="entry-overlay"><section className="entry-modal"><div className="profile-panel-heading"><div><p className="profile-eyebrow">ENCRYPTED ENTRY</p><h2>{editingItem ? 'Edit Entry' : 'New Entry'}</h2></div><button className="modal-close" type="button" onClick={closeEntryModal}>×</button></div><form onSubmit={createEntry}><label>Title<input value={entry.title} onChange={(event) => setEntry({ ...entry, title: event.target.value })} maxLength={120} required /></label><label>Category<select value={entry.category} onChange={(event) => setEntry({ ...entry, category: event.target.value })}>{navigationCategories.slice(1, 4).map((category) => <option key={category.name}>{category.name}</option>)}</select></label><label className="secret-field-label">Secret or private note<div className="secret-input-wrap"><textarea value={entry.secret} onChange={(event) => setEntry({ ...entry, secret: event.target.value })} maxLength={10000} required /><button className="generator-trigger" type="button" onClick={() => setShowInlineGenerator((current) => !current)} aria-label="Passwort-Generator öffnen"><WandSparkles size={17} /></button><PasswordGenerator inline isOpen={showInlineGenerator} onClose={() => setShowInlineGenerator(false)} onUse={useGeneratedSecret} /></div></label><button className="primary-button" type="submit">{editingItem ? 'Encrypt and update' : 'Encrypt and save'}</button></form></section></div>}
+          <PasswordGenerator isOpen={showGenerator} onClose={() => setShowGenerator(false)} />
         </div>
       </main>
     </div>
