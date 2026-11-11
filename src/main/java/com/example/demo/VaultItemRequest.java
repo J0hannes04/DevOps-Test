@@ -12,7 +12,7 @@ public class VaultItemRequest {
     private String category;
 
     @NotBlank
-    @Size(max = 2_000_000)
+    @Size(max = 20_000_000)
     private String ciphertext;
 
     @NotBlank

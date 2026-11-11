@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity, AlertTriangle, CheckCircle2, CreditCard, Eye, EyeOff, FileText,
   Key, LayoutGrid, Lock, LogOut, MoreVertical, Plus, Search, Shield, User, WandSparkles,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { createWorker } from 'tesseract.js';
 import { apiFetch, getCsrfToken } from './api';
 import { decryptVaultPayload, deriveVaultKey, encryptVerifier, encryptVaultPayload } from './crypto';
 import PasswordGenerator from './PasswordGenerator';
@@ -18,6 +19,22 @@ const navigationCategories = [
 ];
 
 const VAULT_IDLE_TIMEOUT_MS = 5 * 60 * 1000;
+const createEmptyEntry = (category = 'Passwords') => ({
+  title: '',
+  category,
+  username: '',
+  website: '',
+  cardNumber: '',
+  expiryDate: '',
+  cvv: '',
+  cardholderName: '',
+  secret: '',
+  firstName: '',
+  lastName: '',
+  documentNumber: '',
+  documentData: '',
+  documentMimeType: '',
+});
 
 const isWeakSecret = (secret) => {
   const normalizedSecret = secret.trim().toLowerCase();
@@ -25,6 +42,8 @@ const isWeakSecret = (secret) => {
   return normalizedSecret.length < 12
     || commonSecrets.some((commonSecret) => normalizedSecret.includes(commonSecret));
 };
+
+const getItemPreview = (item) => item.secret || item.cardNumber || item.username || '';
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -46,8 +65,19 @@ function Dashboard() {
   const [editingItem, setEditingItem] = useState(null);
   const [showGenerator, setShowGenerator] = useState(false);
   const [showInlineGenerator, setShowInlineGenerator] = useState(false);
-  const [entry, setEntry] = useState({ title: '', category: 'Passwords', secret: '' });
+  const [entry, setEntry] = useState(createEmptyEntry());
   const [revealedId, setRevealedId] = useState(null);
+  const [documentPreviewUrl, setDocumentPreviewUrl] = useState('');
+  const [ocrStatus, setOcrStatus] = useState('');
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [entryError, setEntryError] = useState('');
+  const [isSavingEntry, setIsSavingEntry] = useState(false);
+  const ocrWorkerRef = useRef(null);
+
+  useEffect(() => () => {
+    if (documentPreviewUrl && documentPreviewUrl.startsWith('blob:')) URL.revokeObjectURL(documentPreviewUrl);
+    if (ocrWorkerRef.current) ocrWorkerRef.current.terminate();
+  }, [documentPreviewUrl]);
 
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -81,6 +111,8 @@ function Dashboard() {
   const handleLogout = () => {
     setVaultKey(null);
     setItems([]);
+    setEntry(createEmptyEntry());
+    setShowNewEntry(false);
     apiFetch('/api/auth/logout', { method: 'POST' }).finally(() => navigate('/'));
   };
 
@@ -166,6 +198,8 @@ function Dashboard() {
     setVaultKey(null);
     setItems([]);
     setRevealedId(null);
+    setEntry(createEmptyEntry());
+    setShowNewEntry(false);
     setMasterPassword('');
     setMasterPasswordConfirmation('');
   };
@@ -180,6 +214,8 @@ function Dashboard() {
         setVaultKey(null);
         setItems([]);
         setRevealedId(null);
+        setEntry(createEmptyEntry());
+        setShowNewEntry(false);
       }, VAULT_IDLE_TIMEOUT_MS);
     };
     const activityEvents = ['click', 'keydown', 'mousemove', 'scroll', 'touchstart'];
@@ -199,10 +235,32 @@ function Dashboard() {
 
   const createEntry = async (event) => {
     event.preventDefault();
+    setEntryError('');
+    setIsSavingEntry(true);
     try {
       const encrypted = await encryptVaultPayload(vaultKey, {
         title: entry.title,
-        secret: entry.secret,
+        ...(entry.category === 'Financial'
+          ? {
+            cardNumber: entry.cardNumber,
+            expiryDate: entry.expiryDate,
+            cvv: entry.cvv,
+            cardholderName: entry.cardholderName,
+          }
+          : entry.category === 'Identity & Docs'
+            ? {
+              firstName: entry.firstName,
+              lastName: entry.lastName,
+              documentNumber: entry.documentNumber,
+              expiryDate: entry.expiryDate,
+              documentData: entry.documentData,
+              documentMimeType: entry.documentMimeType,
+            }
+            : {
+            username: entry.username,
+            website: entry.website,
+            secret: entry.secret,
+            }),
       });
       const response = await apiFetch(
         editingItem ? `/api/vault/items/${editingItem.id}` : '/api/vault/items',
@@ -212,34 +270,174 @@ function Dashboard() {
         body: JSON.stringify({ category: entry.category, ...encrypted }),
         },
       );
-      if (!response.ok) throw new Error(editingItem ? 'Eintrag konnte nicht aktualisiert werden.' : 'Eintrag konnte nicht gespeichert werden.');
+      if (!response.ok) {
+        const responseMessage = await response.text();
+        throw new Error(responseMessage || `${editingItem ? 'Eintrag konnte nicht aktualisiert' : 'Eintrag konnte nicht gespeichert'} werden (HTTP ${response.status}).`);
+      }
       const saved = await response.json();
       setItems((current) => editingItem
         ? current.map((item) => item.id === editingItem.id ? { ...saved, ...entry } : item)
         : [...current, { ...saved, ...entry }]);
-      setEntry({ title: '', category: 'Passwords', secret: '' });
+      setEntry(createEmptyEntry());
       setEditingItem(null);
       setShowNewEntry(false);
+      setIsSavingEntry(false);
     } catch (error) {
-      setMessage(`Fehler: ${error.message}`);
+      setEntryError(`Fehler: ${error.message}`);
+      setIsSavingEntry(false);
     }
   };
 
   const openNewEntry = () => {
     setEditingItem(null);
-    setEntry({ title: '', category: 'Passwords', secret: '' });
+    setEntry(createEmptyEntry());
+    if (documentPreviewUrl && documentPreviewUrl.startsWith('blob:')) URL.revokeObjectURL(documentPreviewUrl);
+    setDocumentPreviewUrl('');
+    setOcrStatus('');
+    setOcrProgress(0);
+    setEntryError('');
+    setIsSavingEntry(false);
     setShowNewEntry(true);
   };
 
   const openEditEntry = (item) => {
     setEditingItem(item);
-    setEntry({ title: item.title, category: item.category, secret: item.secret });
+    setEntry({ ...createEmptyEntry(item.category), ...item });
+    if (documentPreviewUrl && documentPreviewUrl.startsWith('blob:')) URL.revokeObjectURL(documentPreviewUrl);
+    setDocumentPreviewUrl(item.category === 'Identity & Docs' && item.documentData
+      ? `data:${item.documentMimeType || 'image/jpeg'};base64,${item.documentData}`
+      : '');
+    setOcrStatus('');
+    setOcrProgress(0);
+    setEntryError('');
+    setIsSavingEntry(false);
     setShowNewEntry(true);
   };
 
   const closeEntryModal = () => {
     setEditingItem(null);
     setShowNewEntry(false);
+    setShowInlineGenerator(false);
+    if (documentPreviewUrl) URL.revokeObjectURL(documentPreviewUrl);
+    setDocumentPreviewUrl('');
+    setOcrStatus('');
+    setOcrProgress(0);
+    setEntryError('');
+    setIsSavingEntry(false);
+  };
+
+  const parseOcrText = (text) => {
+    const lines = text.split(/\r?\n/)
+      .map((line) => line.replace(/[|_[\]{}]/g, ' ').replace(/\s+/g, ' ').trim())
+      .filter(Boolean);
+    const findLabeledValue = (labels) => {
+      const labelPattern = new RegExp(`(?:${labels.join('|')})`, 'i');
+      const isName = (value) => /^[A-ZÄÖÜÀ-Ý][A-ZÄÖÜÀ-Ý' -]{1,39}$/i.test(value)
+        && value.split(' ').length <= 4;
+      for (let index = 0; index < lines.length; index += 1) {
+        if (!labelPattern.test(lines[index])) continue;
+        const sameLine = lines[index].replace(labelPattern, '').replace(/^[\s:/-]+/, '').trim();
+        if (isName(sameLine)) return sameLine;
+        for (let offset = 1; offset <= 3; offset += 1) {
+          const candidate = lines[index + offset]?.replace(/[^A-ZÄÖÜÀ-Ý' -]/gi, ' ').replace(/\s+/g, ' ').trim();
+          if (candidate && isName(candidate)) return candidate;
+        }
+      }
+      return '';
+    };
+    const dates = text.match(/\b\d{2}[./-]\d{2}[./-]\d{2,4}\b/g) || [];
+    const documentNumber = text.match(/\b[A-Z0-9]{8,12}\b/gi)?.find((value) => /[A-Z]/i.test(value) && /\d/.test(value)) || '';
+    return {
+      firstName: findLabeledValue(['Vornamen?', 'Given names?', 'First names?']),
+      lastName: findLabeledValue(['Familienname', 'Nachname', 'Surname', 'Last name']),
+      documentNumber: findLabeledValue(['Ausweisnummer', 'Dokumentennummer', 'Document no']) || documentNumber,
+      expiryDate: dates.at(-1) || '',
+    };
+  };
+
+  const prepareOcrImage = (file) => new Promise((resolve, reject) => {
+    const image = new Image();
+    const sourceUrl = URL.createObjectURL(file);
+    image.onload = () => {
+      URL.revokeObjectURL(sourceUrl);
+      const scale = Math.min(3, Math.max(2, 1800 / image.width));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(image.width * scale);
+      canvas.height = Math.round(image.height * scale);
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      for (let index = 0; index < imageData.data.length; index += 4) {
+        const luminance = (imageData.data[index] * 0.299)
+          + (imageData.data[index + 1] * 0.587)
+          + (imageData.data[index + 2] * 0.114);
+        const contrast = Math.max(0, Math.min(255, ((luminance - 128) * 1.35) + 128));
+        imageData.data[index] = contrast;
+        imageData.data[index + 1] = contrast;
+        imageData.data[index + 2] = contrast;
+      }
+      context.putImageData(imageData, 0, 0);
+      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Bild konnte nicht vorbereitet werden.'))), 'image/png');
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(sourceUrl);
+      reject(new Error('Bild konnte nicht geladen werden.'));
+    };
+    image.src = sourceUrl;
+  });
+
+  const handleDocumentFile = async (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setOcrStatus('Bitte wähle ein Bild (JPG, PNG oder WEBP) aus.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setOcrStatus('Das Bild darf maximal 10 MB groß sein.');
+      return;
+    }
+    if (documentPreviewUrl) URL.revokeObjectURL(documentPreviewUrl);
+    setDocumentPreviewUrl(URL.createObjectURL(file));
+    setOcrProgress(0);
+    setOcrStatus('Lese Daten lokal aus...');
+    try {
+      const documentData = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+        reader.onerror = () => reject(new Error('Datei konnte nicht gelesen werden.'));
+        reader.readAsDataURL(file);
+      });
+      if (ocrWorkerRef.current) await ocrWorkerRef.current.terminate();
+      const worker = await createWorker(['eng', 'deu'], 1, {
+        logger: (progress) => {
+          if (progress.status === 'recognizing text') setOcrProgress(Math.round(progress.progress * 100));
+        },
+      });
+      ocrWorkerRef.current = worker;
+      const ocrImage = await prepareOcrImage(file);
+      const result = await worker.recognize(ocrImage);
+      const parsed = parseOcrText(result.data.text);
+      await worker.terminate();
+      ocrWorkerRef.current = null;
+      setEntry((current) => ({
+        ...current,
+        ...parsed,
+        documentData,
+        documentMimeType: file.type,
+        title: current.title || file.name.replace(/\.[^.]+$/, ''),
+      }));
+      setOcrProgress(100);
+      setOcrStatus('Scan abgeschlossen. Bitte prüfe die erkannten Daten.');
+    } catch (error) {
+      if (ocrWorkerRef.current) await ocrWorkerRef.current.terminate();
+      ocrWorkerRef.current = null;
+      setOcrStatus(`OCR fehlgeschlagen: ${error.message}`);
+    }
+  };
+
+  const handleDocumentDrop = (event) => {
+    event.preventDefault();
+    handleDocumentFile(event.dataTransfer.files[0]);
   };
 
   const reviewItem = (item) => {
@@ -367,10 +565,10 @@ function Dashboard() {
           ) : (
             <>
               <div className="vault-page-heading"><div><h1>{activeCategory}</h1><p>Your decrypted entries exist only while the vault is unlocked.</p></div><div className="heading-actions"><button className="secondary-button" type="button" onClick={lockVault}><Lock size={17} /> Lock</button><button className="primary-button" type="button" onClick={openNewEntry}><Plus size={18} /> New Entry</button></div></div>
-              {filteredItems.length > 0 ? <div className="vault-item-grid">{filteredItems.map((item) => <article className="vault-item-card" key={item.id}><div className="item-card-heading"><div><h2>{item.title}</h2><span>{item.category}</span></div><button type="button" aria-label={`Eintrag ${item.title} bearbeiten`} onClick={() => openEditEntry(item)}><MoreVertical size={19} /></button></div><div className="item-secret"><code>{revealedId === item.id ? item.secret : '••••••••••••••••'}</code><button type="button" onClick={() => setRevealedId(revealedId === item.id ? null : item.id)} aria-label="Geheimnis anzeigen">{revealedId === item.id ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></article>)}</div> : <section className="vault-empty-state"><div className="empty-icon"><EyeOff size={27} /></div><h2>No entries found</h2><p>Your encrypted vault is ready for its first entry.</p><button className="primary-button" type="button" onClick={openNewEntry}><Plus size={18} /> New Entry</button></section>}
+              {filteredItems.length > 0 ? <div className="vault-item-grid">{filteredItems.map((item) => <article className="vault-item-card" key={item.id}><div className="item-card-heading"><div><h2>{item.title}</h2><span>{item.category}</span></div><button type="button" aria-label={`Eintrag ${item.title} bearbeiten`} onClick={() => openEditEntry(item)}><MoreVertical size={19} /></button></div><div className="item-secret"><code>{revealedId === item.id ? getItemPreview(item) : '••••••••••••••••'}</code><button type="button" onClick={() => setRevealedId(revealedId === item.id ? null : item.id)} aria-label="Geheimnis anzeigen">{revealedId === item.id ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></article>)}</div> : <section className="vault-empty-state"><div className="empty-icon"><EyeOff size={27} /></div><h2>No entries found</h2><p>Your encrypted vault is ready for its first entry.</p><button className="primary-button" type="button" onClick={openNewEntry}><Plus size={18} /> New Entry</button></section>}
             </>
           )}
-          {showNewEntry && <div className="entry-overlay"><section className="entry-modal"><div className="profile-panel-heading"><div><p className="profile-eyebrow">ENCRYPTED ENTRY</p><h2>{editingItem ? 'Edit Entry' : 'New Entry'}</h2></div><button className="modal-close" type="button" onClick={closeEntryModal}>×</button></div><form onSubmit={createEntry}><label>Title<input value={entry.title} onChange={(event) => setEntry({ ...entry, title: event.target.value })} maxLength={120} required /></label><label>Category<select value={entry.category} onChange={(event) => setEntry({ ...entry, category: event.target.value })}>{navigationCategories.slice(1, 4).map((category) => <option key={category.name}>{category.name}</option>)}</select></label><label className="secret-field-label">Secret or private note<div className="secret-input-wrap"><textarea value={entry.secret} onChange={(event) => setEntry({ ...entry, secret: event.target.value })} maxLength={10000} required /><button className="generator-trigger" type="button" onClick={() => setShowInlineGenerator((current) => !current)} aria-label="Passwort-Generator öffnen"><WandSparkles size={17} /></button><PasswordGenerator inline isOpen={showInlineGenerator} onClose={() => setShowInlineGenerator(false)} onUse={useGeneratedSecret} /></div></label><button className="primary-button" type="submit">{editingItem ? 'Encrypt and update' : 'Encrypt and save'}</button></form></section></div>}
+          {showNewEntry && <div className="entry-overlay"><section className="entry-modal"><div className="profile-panel-heading"><div><p className="profile-eyebrow">ENCRYPTED ENTRY</p><h2>{editingItem ? 'Edit Entry' : 'New Entry'}</h2></div><button className="modal-close" type="button" onClick={closeEntryModal}>×</button></div><div className="entry-type-tabs">{navigationCategories.slice(1, 4).map((category) => { const Icon = category.icon; return <button className={entry.category === category.name ? 'active' : ''} key={category.name} type="button" onClick={() => { setEntry((current) => ({ ...createEmptyEntry(category.name), title: current.title })); setShowInlineGenerator(false); setOcrStatus(''); setEntryError(''); }}><Icon size={14} /> {category.name}</button>; })}</div><form onSubmit={createEntry}><label>{entry.category === 'Financial' ? 'Card / account name' : 'Title / service'}<input value={entry.title} onChange={(event) => setEntry({ ...entry, title: event.target.value })} placeholder={entry.category === 'Financial' ? 'e.g. Main Credit Card' : 'e.g. Netflix, Google'} maxLength={120} required /></label>{entry.category === 'Financial' ? <><div className="entry-form-grid"><label>Card number<input value={entry.cardNumber} onChange={(event) => setEntry({ ...entry, cardNumber: event.target.value })} placeholder="0000 0000 0000 0000" maxLength={32} required /></label><label>Expiry date<input value={entry.expiryDate} onChange={(event) => setEntry({ ...entry, expiryDate: event.target.value })} placeholder="MM/YY" maxLength={5} required /></label></div><div className="entry-form-grid"><label>CVV<input type="password" value={entry.cvv} onChange={(event) => setEntry({ ...entry, cvv: event.target.value })} placeholder="•••" maxLength={4} required /></label><label>Cardholder name<input value={entry.cardholderName} onChange={(event) => setEntry({ ...entry, cardholderName: event.target.value })} placeholder="Name on card" maxLength={120} required /></label></div></> : entry.category === 'Identity & Docs' ? <><div className="document-drop-zone" onDragOver={(event) => event.preventDefault()} onDrop={handleDocumentDrop}><FileText size={30} /><strong>Ziehe deinen Ausweis hierher</strong><span>oder klicke zur Auswahl. Das Bild verlässt dein Gerät nicht unverschlüsselt.</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => handleDocumentFile(event.target.files[0])} /></div>{documentPreviewUrl && <div className="document-preview"><img src={documentPreviewUrl} alt="Lokale Dokumentvorschau" /><div className="document-scan-line" /></div>}{ocrStatus && <div className="ocr-status"><span>{ocrStatus}</span>{ocrProgress > 0 && <span>{ocrProgress}%</span></div>}<div className="entry-form-grid"><label>Vorname<input value={entry.firstName} onChange={(event) => setEntry({ ...entry, firstName: event.target.value })} maxLength={120} /></label><label>Nachname<input value={entry.lastName} onChange={(event) => setEntry({ ...entry, lastName: event.target.value })} maxLength={120} /></label></div><div className="entry-form-grid"><label>Ausweisnummer<input value={entry.documentNumber} onChange={(event) => setEntry({ ...entry, documentNumber: event.target.value })} maxLength={40} /></label><label>Ablaufdatum<input value={entry.expiryDate} onChange={(event) => setEntry({ ...entry, expiryDate: event.target.value })} placeholder="DD.MM.YYYY" maxLength={10} /></label></div></> : <><label>Username / email<input value={entry.username} onChange={(event) => setEntry({ ...entry, username: event.target.value })} placeholder="hello@example.com" maxLength={254} /></label><label>Website URL<input type="url" value={entry.website} onChange={(event) => setEntry({ ...entry, website: event.target.value })} placeholder="https://" maxLength={500} /></label><label className="secret-field-label">Password or private note<div className="secret-input-wrap"><textarea value={entry.secret} onChange={(event) => setEntry({ ...entry, secret: event.target.value })} maxLength={10000} required /><button className="generator-trigger" type="button" onClick={() => setShowInlineGenerator((current) => !current)} aria-label="Passwort-Generator öffnen"><WandSparkles size={17} /></button><PasswordGenerator inline isOpen={showInlineGenerator} onClose={() => setShowInlineGenerator(false)} onUse={useGeneratedSecret} /></div></label>          </>}{entryError && <p className="form-error">{entryError}</p>}<button className="primary-button" type="submit" disabled={ocrStatus === 'Lese Daten lokal aus...' || isSavingEntry}>{isSavingEntry ? 'Saving...' : (editingItem ? 'Encrypt and update' : 'Encrypt and save')}</button></form></section></div>}
           <PasswordGenerator isOpen={showGenerator} onClose={() => setShowGenerator(false)} />
         </div>
       </main>
